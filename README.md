@@ -1,4 +1,4 @@
-<h3 align="center">AstroModLoader - Download and update Astronner Mods</h3>
+<h3 align="center">AstroModLoader - Download and update Astroneer Mods</h3>
 
 ## Table of Contents
 
