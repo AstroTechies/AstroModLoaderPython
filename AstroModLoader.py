@@ -22,6 +22,15 @@ class AstroModLoader():
 
         print(self.modPath)
 
+        self.installedMods = [
+            f for f in os.listdir(self.modPath) if os.path.isfile(os.path.join(self.modPath, f))]
+
+        for modName in self.installedMods:
+            print(modName)
+
+            PP = PakParser(os.path.join(self.modPath, modName))
+            print(PP.data)
+
 
 if __name__ == "__main__":
     try:
