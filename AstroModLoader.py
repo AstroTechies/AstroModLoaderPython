@@ -138,10 +138,9 @@ class AstroModLoader():
         print("parsing metadata...")
         self.mods = list(map(readModData, self.mods))
 
-        # print(self.mods)
-
         # TODO download updates
 
+        self.printModList = True
         while True:
             # clear install path
             for pak in self.getPaksInPath(self.installPath):
@@ -169,31 +168,64 @@ class AstroModLoader():
                 f.write(json.dumps({"mods": config}))
 
             # list mods and commands
-            tabelData = []
-            tabelData.append(
-                ["active", "mod name", "version", "author", "mod id", "update", "always active"])
+            if self.printModList:
+                self.printModList = False
+                tabelData = []
+                tabelData.append(
+                    ["active", "mod name", "version", "author", "mod id", "update", "always active"])
 
-            for mod in self.mods:
-                tabelData.append([
-                    mod["installed"],
-                    mod["metadata"]["name"],
-                    mod["metadata"]["version"],
-                    mod["metadata"]["author"],
-                    mod["metadata"]["mod_id"],
-                    mod["update"],
-                    mod["always_active"]
-                ])
+                for mod in self.mods:
+                    tabelData.append([
+                        mod["installed"],
+                        mod["metadata"]["name"],
+                        mod["metadata"]["version"],
+                        mod["metadata"]["author"],
+                        mod["metadata"]["mod_id"],
+                        mod["update"],
+                        mod["always_active"]
+                    ])
 
-            table = SingleTable(tabelData, "Available mods")
-            print("")
-            print(table.table)
-            print("commands: exit, (activate, deactivate, server)")
+                table = SingleTable(tabelData, "Available mods")
+                print("")
+                print(table.table)
+                print(
+                    "commands: exit/ctrl+C, (activate, deactivate, server, setupdate, alwaysactive, info, list, help)")
 
             # TODO start cli for moving mods and server config
             cmd = input("> ")
 
             if cmd == "exit":
                 break
+            elif cmd == "activate":
+                if (mod := self.getInputMod()) is not None:
+                    mod["installed"] = True
+                    self.printModList = True
+
+            elif cmd == "deactivate":
+                if (mod := self.getInputMod()) is not None:
+                    mod["installed"] = False
+                    self.printModList = True
+            elif cmd == "update":
+                if (mod := self.getInputMod()) is not None:
+                    mod["update"] = input(
+                        "should this mod be auto updated (True/False)? > ") == "True"
+                    self.printModList = True
+            elif cmd == "alwaysactive":
+                if (mod := self.getInputMod()) is not None:
+                    mod["always_active"] = input(
+                        "should this mod always be active (True/False)? > ") == "True"
+                    self.printModList = True
+            elif cmd == "info":
+                if (mod := self.getInputMod()) is not None:
+                    print(mod)
+            elif cmd == "server":
+                print("not implemented yet")
+            elif cmd == "list":
+                self.printModList = True
+            elif cmd == "help":
+                print("*insert help text*")
+            else:
+                print("unknown command, use help for help")
 
         print("exiting...")
 
@@ -213,6 +245,18 @@ class AstroModLoader():
             return json.loads(metadataFile[0])
         else:
             return {}
+
+    def getInputMod(self):
+        mod_id = input("which mod? > ")
+        mod = None
+        for m in self.mods:
+            if m["metadata"]["mod_id"] == mod_id:
+                mod = m
+        if mod is not None:
+            return mod
+        else:
+            print("mod not found")
+            return None
 
 
 if __name__ == "__main__":
