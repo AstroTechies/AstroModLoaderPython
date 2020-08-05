@@ -20,10 +20,31 @@ class AstroModLoader():
             os.makedirs(os.path.join(self.modPath, "Paks"))
         self.modPath = os.path.join(self.modPath, "Paks")
 
-        print(self.modPath)
+        print("mod path: " + self.modPath)
+
+        # TODO check download path for mods
+
+        # TODO check mod path for mods
+
+        # TODO read all data into a dict
+
+        # TODO copy mods only in path to download path
+
+        # TODO clear mod path
+
+        # TODO download updates
+
+        # refresh {
+        # TODO load all previously active mods back into mod path
+
+        # TODO do mod integration
+        # }
+
+        # TODO start cli for moving mods and server config, do refresh
 
         self.installedMods = [
-            f for f in os.listdir(self.modPath) if os.path.isfile(os.path.join(self.modPath, f))]
+            f for f in os.listdir(self.modPath) if os.path.isfile(os.path.join(self.modPath, f)) and os.path.splitext(os.path.join(self.modPath, f))[1] == ".pak"]
+        print(self.installedMods)
 
         for modName in self.installedMods:
             print(modName)
