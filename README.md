@@ -12,22 +12,22 @@
 - [Usage](#usage)
   - [Building an EXE](#building-an-exe)
 - [Contributing](#contributing)
-- [License](#license)
-- [Contact](#contact)
+<!-- [License](#license)
+- [Contact](#contact)-->
 
 ## Overview
 
 This tool is manages your Astronner Mods in UE4 pak file form.
 
-## What does it do? (supposed)
+## What does it do?
 
 1. Updates your mods
 2. Downloads mods for one dedicated server
 
 ## TODO
 
-1. update mods
-2. interface (cli)
+1. auto update mods
+2. mod integration
 3. get server mods
 
 <!-- GETTING STARTED -->

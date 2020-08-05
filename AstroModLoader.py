@@ -189,9 +189,8 @@ class AstroModLoader():
                 print("")
                 print(table.table)
                 print(
-                    "commands: exit/ctrl+C, (activate, deactivate, server, setupdate, alwaysactive, info, list, help)")
+                    "commands: exit/ctrl+C, activate, deactivate, update, alwaysactive, info, (server,) list, help)")
 
-            # TODO start cli for moving mods and server config
             cmd = input("> ")
 
             if cmd == "exit":
@@ -219,6 +218,7 @@ class AstroModLoader():
                 if (mod := self.getInputMod()) is not None:
                     print(mod)
             elif cmd == "server":
+                # TODO server mod downloading
                 print("not implemented yet")
             elif cmd == "list":
                 self.printModList = True
