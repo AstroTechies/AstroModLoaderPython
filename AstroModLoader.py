@@ -1,4 +1,5 @@
 import os
+import numpy
 
 from PyPAKParser import PakParser
 import cogs.AstroAPI as AstroAPI
@@ -9,22 +10,29 @@ class AstroModLoader():
     def __init__(self):
         print("Astro mod loader v0.1")
 
+        # configure and store used paths
         self.downloadPath = os.getcwd()
         if not os.path.exists(os.path.join(self.downloadPath, "mods")):
             os.makedirs(os.path.join(self.downloadPath, "mods"))
         self.downloadPath = os.path.join(self.downloadPath, "mods")
 
-        self.modPath = os.path.join(
+        self.installPath = os.path.join(
             os.getenv('LOCALAPPDATA'), "Astro", "Saved")
-        if not os.path.exists(os.path.join(self.modPath, "Paks")):
-            os.makedirs(os.path.join(self.modPath, "Paks"))
-        self.modPath = os.path.join(self.modPath, "Paks")
+        if not os.path.exists(os.path.join(self.installPath, "Paks")):
+            os.makedirs(os.path.join(self.installPath, "Paks"))
+        self.installPath = os.path.join(self.installPath, "Paks")
+        # print("mod path: " + self.installPath)
 
-        print("mod path: " + self.modPath)
+        # gather mod list
+        self.mods = numpy.unique(self.getPaksInPath(
+            self.downloadPath) + self.getPaksInPath(self.installPath))
 
-        # TODO check download path for mods
+        self.mods = list(map(lambda m: {"filename": m}, self.mods))
 
-        # TODO check mod path for mods
+        print(self.mods)
+        # TODO check each mod where it is present
+        for mod in self.mods:
+            pass
 
         # TODO read all data into a dict
 
@@ -42,16 +50,16 @@ class AstroModLoader():
 
         # TODO start cli for moving mods and server config, do refresh
 
-        self.installedMods = [
-            f for f in os.listdir(self.modPath) if os.path.isfile(os.path.join(self.modPath, f)) and os.path.splitext(os.path.join(self.modPath, f))[1] == ".pak"]
-        print(self.installedMods)
+        # self.installedMods =
+
+        """print(self.installedMods)
 
         for modName in self.installedMods:
             print(modName)
 
-            PP = PakParser(os.path.join(self.modPath, modName))
+            PP = PakParser(os.path.join(self.installPath, modName))
             try:
-                PP = PakParser(os.path.join(self.modPath, modName))
+                PP = PakParser(os.path.join(self.installPath, modName))
                 metadataFile = [
                     x.Data for x in PP.records if x.fileName == "metadata.json"]
                 ppData = ""
@@ -59,7 +67,15 @@ class AstroModLoader():
                     ppData = metadataFile[0]
                 print(ppData)
             except:
-                pass
+                pass"""
+
+    def getPaksInPath(self, path):
+        paks = []
+        for f in os.listdir(path):
+            if os.path.isfile(os.path.join(path, f)) and os.path.splitext(os.path.join(path, f))[1] == ".pak":
+                paks.append(f)
+
+        return paks
 
 
 if __name__ == "__main__":
@@ -71,6 +87,6 @@ if __name__ == "__main__":
         AstroModLoader()
     except KeyboardInterrupt:
         pass
-    except Exception as err:
-        print("ERROR")
-        print(err)
+    # except Exception as err:
+     #   print("ERROR")
+      #  print(err)
