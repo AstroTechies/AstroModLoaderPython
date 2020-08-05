@@ -24,7 +24,6 @@ class AstroModLoader():
         if not os.path.exists(os.path.join(self.installPath, "Paks")):
             os.makedirs(os.path.join(self.installPath, "Paks"))
         self.installPath = os.path.join(self.installPath, "Paks")
-        # print("mod path: " + self.installPath)
 
         # gather mod list (only files)
         print("gathering mod data...")
@@ -72,7 +71,11 @@ class AstroModLoader():
             if "version" in metadata:
                 mod["metadata"]["version"] = metadata["version"]
             else:
-                mod["metadata"]["version"] = "1.0.0"
+                if len(mod["filename"].split("_")[0].split("-")) == 3:
+                    mod["metadata"]["version"] = mod["filename"].split("_")[
+                        0].split("-")[2]
+                else:
+                    mod["metadata"]["version"] = "---"
 
             if "astro_build" in metadata:
                 mod["metadata"]["astro_build"] = metadata["astro_build"]
@@ -122,10 +125,12 @@ class AstroModLoader():
 
             # TODO list mods and commands
             tabelData = []
-            tabelData.append(["mod name"])
+            tabelData.append(
+                ["active", "mod name", "version", "author", "mod id"])
 
             for mod in self.mods:
-                tabelData.append([mod["metadata"]["name"]])
+                tabelData.append(
+                    [mod["installed"], mod["metadata"]["name"], mod["metadata"]["version"], mod["metadata"]["author"], mod["metadata"]["mod_id"]])
 
             table = SingleTable(tabelData, "Available mods")
             print(table.table)
