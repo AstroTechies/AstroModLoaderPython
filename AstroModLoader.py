@@ -235,14 +235,14 @@ class AstroModLoader():
         return paks
 
     def getMetadata(self, path):
-        PP = PakParser(path)
-        metadataFile = [
-            x.Data for x in PP.records if x.fileName == "metadata.json"]
-
-        if len(metadataFile) > 0:
-            return json.loads(metadataFile[0])
-        else:
-            return {}
+        with open(path, "rb") as pakFile:
+            PP = PakParser(pakFile)
+            mdFile = "metadata.json"
+            md = PP.List(mdFile)
+            ppData = {}
+            if mdFile in md:
+                ppData = json.loads(PP.Unpack(mdFile).Data)
+            return ppData
 
     def getInputMod(self):
         mod_id = input("which mod? > ")
