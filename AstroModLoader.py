@@ -43,30 +43,65 @@ class AstroModLoader():
 
             # read metadata
             mod["metadata"] = {}
-            print(self.getMetadata(os.path.join(
-                self.downloadPath, mod["filename"])))
+            metadata = self.getMetadata(os.path.join(
+                self.downloadPath, mod["filename"]))
 
-            """
-            {
-                "name": "Coordinate GUI",
-                "mod_id": "CoordinateGUI",
-                "author": "ExampleModder123",
-                "description": "Adds a coordinate display that toggles with the F3 key.",
-                "version": "0.1.0",
-                "astro_build": "1.13.129.0",
-                "priority": "000",
-                "sync": "client",
-                "homepage": "https://example.com",
-                "download": {
-                    "type": "github_repository",
-                    "repository": "examplemodder123/CoordinateGUI"
-                },
-                "linked_actor_components": {
-                    "/Game/Globals/PlayControllerInstance": [
-                        "/Game/Globals/ModdedCGUIActorComponent"
-                    ]
-                }
-            }"""
+            if "name" in metadata:
+                mod["metadata"]["name"] = metadata["name"]
+            else:
+                mod["metadata"]["name"] = mod["filename"]
+
+            if "mod_id" in metadata:
+                mod["metadata"]["mod_id"] = metadata["mod_id"]
+            else:
+                mod["metadata"]["mod_id"] = mod["filename"].split("_")[
+                    0].split("-")[1]
+
+            if "author" in metadata:
+                mod["metadata"]["author"] = metadata["author"]
+            else:
+                mod["metadata"]["author"] = ""
+
+            if "description" in metadata:
+                mod["metadata"]["description"] = metadata["description"]
+            else:
+                mod["metadata"]["description"] = ""
+
+            if "version" in metadata:
+                mod["metadata"]["version"] = metadata["version"]
+            else:
+                mod["metadata"]["version"] = "1.0.0"
+
+            if "astro_build" in metadata:
+                mod["metadata"]["astro_build"] = metadata["astro_build"]
+            else:
+                mod["metadata"]["astro_build"] = "1.13.129.0"
+
+            if "priority" in metadata:
+                mod["metadata"]["priority"] = metadata["priority"]
+            else:
+                mod["metadata"]["priority"] = mod["filename"].split("_")[
+                    0].split("-")[0]
+
+            if "sync" in metadata:
+                mod["metadata"]["sync"] = metadata["sync"]
+            else:
+                mod["metadata"]["sync"] = "serverclient"
+
+            if "homepage" in metadata:
+                mod["metadata"]["homepage"] = metadata["homepage"]
+            else:
+                mod["metadata"]["homepage"] = ""
+
+            if "download" in metadata:
+                mod["metadata"]["download"] = metadata["download"]
+            else:
+                mod["metadata"]["download"] = {}
+
+            if "linked_actor_components" in metadata:
+                mod["metadata"]["linked_actor_components"] = metadata["linked_actor_components"]
+            else:
+                mod["metadata"]["linked_actor_components"] = []
 
             return mod
         self.mods = list(map(readModData, self.mods))
