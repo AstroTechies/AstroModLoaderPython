@@ -9,6 +9,8 @@ verify_ssl = true
 requests = "*"
 pypakparser = "*"
 numpy = "*"
+pyinstaller = {file = "https://github.com/pyinstaller/pyinstaller/archive/develop.zip"}
+terminaltables = "*"
 
 [requires]
 python_version = "3.8"

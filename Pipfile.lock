@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "ea4d96c31c3ae0ae0598475964c1c1122a2b30b3425f8a000953e7c22fa3a49a"
+            "sha256": "785efcfbd63054057914bd25db9c8eca17f28668462177800a73b581c67d8b9f"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -69,6 +69,9 @@
             "index": "pypi",
             "version": "==1.19.1"
         },
+        "pyinstaller": {
+            "file": "https://github.com/pyinstaller/pyinstaller/archive/develop.zip"
+        },
         "pypakparser": {
             "hashes": [
                 "sha256:07c44a242872ed8df721ff3196b87aa2fa2f11ea12964d9265ebe059cfe930ae",
@@ -84,6 +87,13 @@
             ],
             "index": "pypi",
             "version": "==2.24.0"
+        },
+        "terminaltables": {
+            "hashes": [
+                "sha256:f3eb0eb92e3833972ac36796293ca0906e998dc3be91fbe1f8615b331b853b81"
+            ],
+            "index": "pypi",
+            "version": "==3.1.0"
         },
         "urllib3": {
             "hashes": [

@@ -2,8 +2,9 @@ import os
 import numpy
 import shutil
 import json
-
+from terminaltables import SingleTable
 from PyPAKParser import PakParser
+
 import cogs.AstroAPI as AstroAPI
 
 
@@ -26,6 +27,7 @@ class AstroModLoader():
         # print("mod path: " + self.installPath)
 
         # gather mod list (only files)
+        print("gathering mod data...")
         self.mods = numpy.unique(self.getPaksInPath(
             self.downloadPath) + self.getPaksInPath(self.installPath))
 
@@ -104,21 +106,37 @@ class AstroModLoader():
                 mod["metadata"]["linked_actor_components"] = []
 
             return mod
+        print("parsing metadata...")
         self.mods = list(map(readModData, self.mods))
 
         print(self.mods)
 
         # TODO download updates
 
-        # refresh {
-        # TODO clear install path
+        while True:
+            # TODO clear install path
 
-        # TODO load all previously active mods back into mod path (with changes)
+            # TODO load all previously active mods back into mod path (with changes)
 
-        # TODO do mod integration
-        # }
+            # TODO do mod integration
 
-        # TODO start cli for moving mods and server config, do refresh
+            # TODO list mods and commands
+            tabelData = []
+            tabelData.append(["mod name"])
+
+            for mod in self.mods:
+                tabelData.append([mod["metadata"]["name"]])
+
+            table = SingleTable(tabelData, "Available mods")
+            print(table.table)
+
+            # TODO start cli for moving mods and server config
+            cmd = input("> ")
+
+            if cmd == "exit":
+                break
+
+        print("exiting...")
 
     def getPaksInPath(self, path):
         paks = []
