@@ -90,12 +90,6 @@ class AstroModLoader():
             else:
                 mod["metadata"]["astro_build"] = "1.13.129.0"
 
-            if "priority" in metadata:
-                mod["metadata"]["priority"] = metadata["priority"]
-            else:
-                mod["metadata"]["priority"] = mod["filename"].split("_")[
-                    0].split("-")[0]
-
             if "sync" in metadata:
                 mod["metadata"]["sync"] = metadata["sync"]
             else:
@@ -133,6 +127,10 @@ class AstroModLoader():
             else:
                 mod["update"] = True
                 mod["always_active"] = False
+
+            # read priority
+            mod["metadata"]["priority"] = mod["filename"].split("_")[
+                0].split("-")[0]
 
             return mod
         print("parsing metadata...")
