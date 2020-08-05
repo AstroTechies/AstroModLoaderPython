@@ -1,6 +1,6 @@
 import os
 
-from cogs.AstroModPak import PakParser
+from PyPAKParser import PakParser
 import cogs.AstroAPI as AstroAPI
 
 
@@ -29,7 +29,16 @@ class AstroModLoader():
             print(modName)
 
             PP = PakParser(os.path.join(self.modPath, modName))
-            print(PP.data)
+            try:
+                PP = PakParser(os.path.join(self.modPath, modName))
+                metadataFile = [
+                    x.Data for x in PP.records if x.fileName == "metadata.json"]
+                ppData = ""
+                if len(metadataFile) > 0:
+                    ppData = metadataFile[0]
+                print(ppData)
+            except:
+                pass
 
 
 if __name__ == "__main__":
