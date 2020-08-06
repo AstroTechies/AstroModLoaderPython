@@ -34,6 +34,22 @@ class AstroModLoader():
             with open(os.path.join(self.downloadPath, "modconfig.json"), 'w') as f:
                 f.write('{"mods":[]}')
 
+        self.readModFiles()
+
+        self.downloadUpdates()
+
+        if self.gui:
+            self.startGUI()
+        else:
+            self.startCli()
+
+        print("exiting...")
+
+    # ------------------
+    #! STARTUP FUNCTIONS
+    # ------------------
+
+    def readModFiles(self):
         self.modConfig = {}
         with open(os.path.join(self.downloadPath, "modconfig.json"), 'r') as f:
             self.modConfig = json.loads(f.read())
@@ -141,31 +157,11 @@ class AstroModLoader():
         print("parsing metadata...")
         self.mods = list(map(readModData, self.mods))
 
+    def downloadUpdates(self):
+
         # TODO download updates
 
-        if self.gui:
-            self.startGUI()
-        else:
-            self.startCli()
-
-        print("exiting...")
-
-    def getPaksInPath(self, path):
-        paks = []
-        for f in os.listdir(path):
-            if os.path.isfile(os.path.join(path, f)) and os.path.splitext(os.path.join(path, f))[1] == ".pak":
-                paks.append(f)
-        return paks
-
-    def getMetadata(self, path):
-        with open(path, "rb") as pakFile:
-            PP = PakParser(pakFile)
-            mdFile = "metadata.json"
-            md = PP.List(mdFile)
-            ppData = {}
-            if mdFile in md:
-                ppData = json.loads(PP.Unpack(mdFile).Data)
-            return ppData
+        print("downloading updates (not implemented)")
 
     def updateModInstallation(self):
         # clear install path
@@ -192,6 +188,10 @@ class AstroModLoader():
             f.truncate(0)
         with open(os.path.join(self.downloadPath, "modconfig.json"), 'w') as f:
             f.write(json.dumps({"mods": config}))
+
+    # --------------------
+    #! INTERFACE FUNCTIONS
+    # --------------------
 
     def startCli(self):
         self.printModList = True
@@ -258,24 +258,6 @@ class AstroModLoader():
             else:
                 print("unknown command, use help for help")
 
-    def getInputMod(self):
-        mod = self.getModRef(input("which mod? (mod id) > "))
-        if mod is not None:
-            return mod
-        else:
-            print("mod not found")
-            return None
-
-    def getModRef(self, mod_id):
-        mod = None
-        for m in self.mods:
-            if m["metadata"]["mod_id"] == mod_id:
-                mod = m
-        if mod is not None:
-            return mod
-        else:
-            return None
-
     def startGUI(self):
         print("gui go brrrrrrrr")
 
@@ -291,7 +273,8 @@ class AstroModLoader():
             ]
         ]
 
-        # TODO create table
+        # create table
+        # TODO add info button
         for mod in self.mods:
             layout.append([
                 sg.Checkbox("", size=(
@@ -321,7 +304,7 @@ class AstroModLoader():
             if event in (None, "Close"):
                 break
 
-            # TODO listen for checkboxes and other stuff
+            # listen for checkboxes
             if event.startswith("install_"):
                 self.getModRef(event.split("_")[1])[
                     "installed"] = values[event]
@@ -342,7 +325,48 @@ class AstroModLoader():
             else:
                 print(f'Event: {event}')
                 print(str(values))
+
+            # TODO implement other buttons
         window.close()
+
+    # -----------------
+    #! HELPER FUNCTIONS
+    # -----------------
+
+    def getInputMod(self):
+        mod = self.getModRef(input("which mod? (mod id) > "))
+        if mod is not None:
+            return mod
+        else:
+            print("mod not found")
+            return None
+
+    def getModRef(self, mod_id):
+        mod = None
+        for m in self.mods:
+            if m["metadata"]["mod_id"] == mod_id:
+                mod = m
+        if mod is not None:
+            return mod
+        else:
+            return None
+
+        def getPaksInPath(self, path):
+        paks = []
+        for f in os.listdir(path):
+            if os.path.isfile(os.path.join(path, f)) and os.path.splitext(os.path.join(path, f))[1] == ".pak":
+                paks.append(f)
+        return paks
+
+    def getMetadata(self, path):
+        with open(path, "rb") as pakFile:
+            PP = PakParser(pakFile)
+            mdFile = "metadata.json"
+            md = PP.List(mdFile)
+            ppData = {}
+            if mdFile in md:
+                ppData = json.loads(PP.Unpack(mdFile).Data)
+            return ppData
 
 
 if __name__ == "__main__":
