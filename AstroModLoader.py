@@ -298,11 +298,15 @@ class AstroModLoader():
                     2, 1), default=mod["installed"], enable_events=True, key="install_" + mod["metadata"]["mod_id"]),
                 sg.Text(mod["metadata"]["name"], size=(25, 1)),
                 sg.Text(mod["metadata"]["version"], size=(5, 1)),
+                sg.Checkbox("", size=(
+                    7, 1), default=mod["always_active"], enable_events=True, key="alwaysactive_" + mod["metadata"]["mod_id"]),
+                sg.Checkbox("", size=(
+                    2, 1), default=mod["update"], enable_events=True, key="update_" + mod["metadata"]["mod_id"]),
             ])
 
         # create footer
         layout.append([
-            sg.Text("loaded mods...", size=(10, 1), key="-message-"),
+            sg.Text("loaded mods...", size=(40, 1), key="-message-"),
         ])
         layout.append([sg.Button('Close')])
 
@@ -318,9 +322,26 @@ class AstroModLoader():
                 break
 
             # TODO listen for checkboxes and other stuff
-            print(f'Event: {event}')
-            print(str(values))
-            self.getModRef(event.split("_")[1])["installed"] = values[event]
+            if event.startswith("install_"):
+                self.getModRef(event.split("_")[1])[
+                    "installed"] = values[event]
+                window["-message-"].update(
+                    f"updated {event} to {values[event]}")
+
+            elif event.startswith("alwaysactive_"):
+                self.getModRef(event.split("_")[1])[
+                    "always_active"] = values[event]
+                window["-message-"].update(
+                    f"updated {event} to {values[event]}")
+
+            elif event.startswith("update_"):
+                self.getModRef(event.split("_")[1])[
+                    "update"] = values[event]
+                window["-message-"].update(
+                    f"updated {event} to {values[event]}")
+            else:
+                print(f'Event: {event}')
+                print(str(values))
         window.close()
 
 
