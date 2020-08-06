@@ -279,19 +279,32 @@ class AstroModLoader():
     def startGUI(self):
         print("gui go brrrrrrrr")
 
-        """
-        layout = [[sg.Text('Filename')],
-                    [sg.Input(), sg.FileBrowse()],
-                    [sg.OK(), sg.Cancel()]]
+        # create header
+        layout = [
+            [sg.Text("Availble mods:")],
+            [
+                sg.Text("active", size=(4, 1)),
+                sg.Text("modname", size=(25, 1)),
+                sg.Text("version", size=(5, 1)),
+                sg.Text("always_active", size=(10, 1)),
+                sg.Text("auto update", size=(10, 1))
+            ]
+        ]
 
-        window = sg.Window('Get filename example', layout)"""
-
-        # TODO create header
         # TODO create table
-        # TODO create footer
+        for mod in self.mods:
+            layout.append([
+                sg.Checkbox("", size=(
+                    2, 1), default=mod["installed"], enable_events=True, key="install_" + mod["metadata"]["mod_id"]),
+                sg.Text(mod["metadata"]["name"], size=(25, 1)),
+                sg.Text(mod["metadata"]["version"], size=(5, 1)),
+            ])
 
-        layout = [[sg.Text("Availble mods:")],
-                  [sg.Button('OK'), sg.Button('Cancel')]]
+        # create footer
+        layout.append([
+            sg.Text("loaded mods...", size=(10, 1), key="-message-"),
+        ])
+        layout.append([sg.Button('Close')])
 
         window = sg.Window("Astroneer Mod Loader", layout)
 
@@ -301,12 +314,13 @@ class AstroModLoader():
 
             event, values = window.read()
 
-            if event in (None, "Cancel", "OK"):
+            if event in (None, "Close"):
                 break
 
-            # TODO listen for checkboxes
+            # TODO listen for checkboxes and other stuff
             print(f'Event: {event}')
             print(str(values))
+            self.getModRef(event.split("_")[1])["installed"] = values[event]
         window.close()
 
 
