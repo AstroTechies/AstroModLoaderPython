@@ -351,7 +351,7 @@ class AstroModLoader():
         else:
             return None
 
-        def getPaksInPath(self, path):
+    def getPaksInPath(self, path):
         paks = []
         for f in os.listdir(path):
             if os.path.isfile(os.path.join(path, f)) and os.path.splitext(os.path.join(path, f))[1] == ".pak":
