@@ -259,7 +259,14 @@ class AstroModLoader():
                 print("unknown command, use help for help")
 
     def getInputMod(self):
-        mod_id = input("which mod? > ")
+        mod = self.getModRef(input("which mod? (mod id) > "))
+        if mod is not None:
+            return mod
+        else:
+            print("mod not found")
+            return None
+
+    def getModRef(self, mod_id):
         mod = None
         for m in self.mods:
             if m["metadata"]["mod_id"] == mod_id:
@@ -267,7 +274,6 @@ class AstroModLoader():
         if mod is not None:
             return mod
         else:
-            print("mod not found")
             return None
 
     def startGUI(self):
@@ -278,11 +284,30 @@ class AstroModLoader():
                     [sg.Input(), sg.FileBrowse()],
                     [sg.OK(), sg.Cancel()]]
 
-        window = sg.Window('Get filename example', layout)
+        window = sg.Window('Get filename example', layout)"""
 
-        event, values = window.read()
-        print(values)
-        window.close()"""
+        # TODO create header
+        # TODO create table
+        # TODO create footer
+
+        layout = [[sg.Text("Availble mods:")],
+                  [sg.Button('OK'), sg.Button('Cancel')]]
+
+        window = sg.Window("Astroneer Mod Loader", layout)
+
+        # Create the event loop
+        while True:
+            self.updateModInstallation()
+
+            event, values = window.read()
+
+            if event in (None, "Cancel", "OK"):
+                break
+
+            # TODO listen for checkboxes
+            print(f'Event: {event}')
+            print(str(values))
+        window.close()
 
 
 if __name__ == "__main__":
