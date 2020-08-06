@@ -11,6 +11,7 @@ pypakparser = "*"
 numpy = "*"
 pyinstaller = {file = "https://github.com/pyinstaller/pyinstaller/archive/develop.zip"}
 terminaltables = "*"
+pysimplegui = "*"
 
 [requires]
 python_version = "3.8"
