@@ -1,13 +1,19 @@
-import cogs.AstroAPI as AstroAPI
 import os
+import sys
 import numpy
 import shutil
 import json
 import argparse
+import clr
 from terminaltables import SingleTable
 import PySimpleGUI as sg
 
 from PyPAKParser import PakParser
+import cogs.AstroAPI as AstroAPI
+
+sys.path.append("dlls")
+clr.AddReference("AstroModIntegrator")
+from AstroModIntegrator import ModIntegrator
 
 
 class AstroModLoader():
@@ -176,13 +182,26 @@ class AstroModLoader():
         for pak in self.getPaksInPath(self.installPath):
             os.remove(os.path.join(self.installPath, pak))
 
+        # mod integration with some checks
         if self.gamePath == "":
             if not self.gui:
                 print(
                     "no game path specified, mod integration won't be possible until one is specified in modconfig.json")
         else:
-            # TODO do mod integration
-            pass
+            # do mod integration
+            os.mkdir(os.path.join(self.downloadPath, "temp_mods"))
+            for mod in self.mods:
+                if not len(mod["metadata"]["linked_actor_components"]) == 0 and (mod["installed"] or mod["always_active"]):
+                    shutil.copyfile(os.path.join(
+                        self.downloadPath, mod["filename"]), os.path.join(self.downloadPath, "temp_mods", mod["filename"]))
+
+            ModIntegrator.IntegrateMods(os.path.join(self.downloadPath, "temp_mods"),
+                os.path.join(self.gamePath, R"Astro\Content\Paks"))
+
+            shutil.copyfile(os.path.join(self.downloadPath, "temp_mods", "999-AstroModIntegrator_P.pak"),
+                os.path.join(self.installPath, "999-AstroModIntegrator_P.pak"))
+            
+            shutil.rmtree(os.path.join(self.downloadPath, "temp_mods"))
 
         # load all previously active mods back into mod path (with changes)
         for mod in self.mods:
@@ -198,7 +217,6 @@ class AstroModLoader():
                 "update": mod["update"],
                 "always_active": mod["always_active"]
             })
-
         with open(os.path.join(self.downloadPath, "modconfig.json"), 'r+') as f:
             f.truncate(0)
         with open(os.path.join(self.downloadPath, "modconfig.json"), 'w') as f:
