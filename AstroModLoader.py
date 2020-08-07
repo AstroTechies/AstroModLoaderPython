@@ -57,6 +57,11 @@ class AstroModLoader():
         with open(os.path.join(self.downloadPath, "modconfig.json"), 'r') as f:
             self.modConfig = json.loads(f.read())
 
+        if "gamePath" in self.modConfig:
+            self.gamePath = self.modConfig["gamePath"]
+        else:
+            self.gamePath = ""
+
         # gather mod list (only files)
         print("gathering mod data...")
         self.mods = numpy.unique(self.getPaksInPath(
@@ -171,7 +176,13 @@ class AstroModLoader():
         for pak in self.getPaksInPath(self.installPath):
             os.remove(os.path.join(self.installPath, pak))
 
-        # TODO do mod integration
+        if self.gamePath == "":
+            if not self.gui:
+                print(
+                    "no game path specified, mod integration won't be possible until one is specified in modconfig.json")
+        else:
+            # TODO do mod integration
+            pass
 
         # load all previously active mods back into mod path (with changes)
         for mod in self.mods:
@@ -187,10 +198,11 @@ class AstroModLoader():
                 "update": mod["update"],
                 "always_active": mod["always_active"]
             })
+
         with open(os.path.join(self.downloadPath, "modconfig.json"), 'r+') as f:
             f.truncate(0)
         with open(os.path.join(self.downloadPath, "modconfig.json"), 'w') as f:
-            f.write(json.dumps({"mods": config}))
+            f.write(json.dumps({"mods": config, "gamePath": self.gamePath}))
 
     # --------------------
     #! INTERFACE FUNCTIONS
@@ -263,6 +275,10 @@ class AstroModLoader():
 
     def startGUI(self):
         print("gui go brrrrrrrr")
+
+        # get game path
+        if self.gamePath == "":
+            self.gamePath = sg.PopupGetFolder("choose game install directory")
 
         # create header
         layout = [
