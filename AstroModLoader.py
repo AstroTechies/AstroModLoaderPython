@@ -19,10 +19,11 @@ class AstroModLoader():
         sg.theme('Default1')
 
         # configure and store used paths
-        self.downloadPath = os.getcwd()
-        if not os.path.exists(os.path.join(self.downloadPath, "mods")):
-            os.makedirs(os.path.join(self.downloadPath, "mods"))
-        self.downloadPath = os.path.join(self.downloadPath, "mods")
+        self.downloadPath = os.path.join(
+            os.getenv('LOCALAPPDATA'), "Astro", "Saved")
+        if not os.path.exists(os.path.join(self.downloadPath, "Mods")):
+            os.makedirs(os.path.join(self.downloadPath, "Mods"))
+        self.downloadPath = os.path.join(self.downloadPath, "Mods")
 
         self.installPath = os.path.join(
             os.getenv('LOCALAPPDATA'), "Astro", "Saved")
@@ -33,6 +34,8 @@ class AstroModLoader():
         if not os.path.exists(os.path.join(self.downloadPath, "modconfig.json")):
             with open(os.path.join(self.downloadPath, "modconfig.json"), 'w') as f:
                 f.write('{"mods":[]}')
+
+        print(f"Mod download folder: {self.downloadPath}")
 
         self.readModFiles()
 
