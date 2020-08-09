@@ -8,10 +8,11 @@ import shutil
 PyInstaller.__main__.run([
     '--name=%s' % "AstroModLoader",
     '--onefile',
-    #'--add-data=%s' % "assets;./assets",
+    #'--add-data=%s' % "dlls;./dlls",
+    '--add-binary=%s' % "dlls;./dlls",
     #'--icon=%s' % "assets/astrolauncherlogo.ico",
     'AstroModLoader.py'
 ])
 
-shutil.rmtree("build")
-os.remove("AstroModLoader.spec")
+# shutil.rmtree("build")
+# os.remove("AstroModLoader.spec")

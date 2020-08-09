@@ -11,7 +11,11 @@ import PySimpleGUI as sg
 from PyPAKParser import PakParser
 import cogs.AstroAPI as AstroAPI
 
-sys.path.append("dlls")
+# deal with binary loading in .exe
+if hasattr(sys, "_MEIPASS"):
+    sys.path.append(os.path.join(sys._MEIPASS, "dlls"))
+else:
+    sys.path.append("dlls")
 clr.AddReference("AstroModIntegrator")
 from AstroModIntegrator import ModIntegrator
 
@@ -391,7 +395,7 @@ class AstroModLoader():
     def getPaksInPath(self, path):
         paks = []
         for f in os.listdir(path):
-            if os.path.isfile(os.path.join(path, f)) and os.path.splitext(os.path.join(path, f))[1] == ".pak":
+            if os.path.isfile(os.path.join(path, f)) and os.path.splitext(os.path.join(path, f))[1] == ".pak" and f != "999-AstroModIntegrator_P.pak":
                 paks.append(f)
         return paks
 
