@@ -1,4 +1,4 @@
-<h3 align="center">AstroModLoader - Download and update Astroneer Mods</h3>
+<h3 align="center">AstroModLoader - Manage, integrate and update Astroneer Mods</h3>
 
 ## Table of Contents
 
@@ -17,7 +17,8 @@
 
 ## Overview
 
-This tool is manages your Astronner Mods in UE4 pak file form.
+This tool is manages your Astronner Mods in UE4 pak file form.<br />
+Thanks to atenfyr for making the mod integrator part.
 
 ## What does it do?
 
@@ -26,15 +27,15 @@ This tool is manages your Astronner Mods in UE4 pak file form.
 
 ## TODO
 
-1. auto update mods
-2. mod integration
-3. get server mods
+- auto update mods
+- get server mods
+- validate game install path
 
 <!-- GETTING STARTED -->
 
 ## Getting Started
 
-To get a local copy up and running follow these simple steps or check the [Latest Release](https://github.com/konsti219/AstroModLoader/releases/latest) for a download of the executable.
+To get a local copy up and running follow these simple steps or check the [Latest Release](https://github.com/AstroTechies/AstroModLoader/releases/latest) for a download of the executable.
 
 ### Prerequisites
 
@@ -46,7 +47,7 @@ To get a local copy up and running follow these simple steps or check the [Lates
 1. Clone the AstroModLoader repository
 
 ```sh
-git clone https://github.com/konsti219/AstroModLoader.git
+git clone https://github.com/AstroTechies/AstroModLoader.git
 ```
 
 2. Install python modules using pip or pipenv
