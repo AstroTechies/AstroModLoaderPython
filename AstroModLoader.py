@@ -29,14 +29,17 @@ class AstroModLoader():
         sg.theme('Default1')
 
         # configure and store used paths
+        self.basePath = os.path.join(
+            os.getenv('LOCALAPPDATA'), "Astro")
+
         self.downloadPath = os.path.join(
-            os.getenv('LOCALAPPDATA'), "Astro", "Saved")
+            self.basePath, "Saved")
         if not os.path.exists(os.path.join(self.downloadPath, "Mods")):
             os.makedirs(os.path.join(self.downloadPath, "Mods"))
         self.downloadPath = os.path.join(self.downloadPath, "Mods")
 
         self.installPath = os.path.join(
-            os.getenv('LOCALAPPDATA'), "Astro", "Saved")
+            self.basePath, "Saved")
         if not os.path.exists(os.path.join(self.installPath, "Paks")):
             os.makedirs(os.path.join(self.installPath, "Paks"))
         self.installPath = os.path.join(self.installPath, "Paks")
