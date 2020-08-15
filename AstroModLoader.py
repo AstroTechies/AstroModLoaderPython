@@ -132,12 +132,14 @@ class AstroModLoader():
             if "astro_build" in metadata:
                 mod["metadata"]["astro_build"] = metadata["astro_build"]
             else:
-                mod["metadata"]["astro_build"] = "1.13.129.0"
+                mod["metadata"]["astro_build"] = "1.0.0.0"
 
             if "sync" in metadata:
                 mod["metadata"]["sync"] = metadata["sync"]
             else:
                 mod["metadata"]["sync"] = "serverclient"
+            if metadata == {}:
+                mod["metadata"]["sync"] = "client"
 
             if "homepage" in metadata:
                 mod["metadata"]["homepage"] = metadata["homepage"]
@@ -152,7 +154,7 @@ class AstroModLoader():
             if "linked_actor_components" in metadata:
                 mod["metadata"]["linked_actor_components"] = metadata["linked_actor_components"]
             else:
-                mod["metadata"]["linked_actor_components"] = []
+                mod["metadata"]["linked_actor_components"] = {}
 
             # read data from modconfig.json
             config = list(
@@ -163,14 +165,8 @@ class AstroModLoader():
                     mod["update"] = config["update"]
                 else:
                     mod["update"] = True
-
-                if "always_active" in config:
-                    mod["always_active"] = config["always_active"]
-                else:
-                    mod["always_active"] = False
             else:
                 mod["update"] = True
-                mod["always_active"] = False
 
             # read priority
             mod["metadata"]["priority"] = mod["filename"].split("_")[
@@ -196,7 +192,7 @@ class AstroModLoader():
             # do mod integration
             os.mkdir(os.path.join(self.downloadPath, "temp_mods"))
             for mod in self.mods:
-                if not len(mod["metadata"]["linked_actor_components"]) == 0 and (mod["installed"] or mod["always_active"]):
+                if not len(mod["metadata"]["linked_actor_components"]) == 0 and (mod["installed"]):
                     shutil.copyfile(os.path.join(
                         self.downloadPath, mod["filename"]), os.path.join(self.downloadPath, "temp_mods", mod["filename"]))
 
@@ -210,7 +206,7 @@ class AstroModLoader():
 
         # load all previously active mods back into mod path (with changes)
         for mod in self.mods:
-            if mod["installed"] or mod["always_active"]:
+            if mod["installed"]:
                 shutil.copyfile(os.path.join(
                     self.downloadPath, mod["filename"]), os.path.join(self.installPath, mod["filename"]))
 
@@ -219,8 +215,7 @@ class AstroModLoader():
         for mod in self.mods:
             config.append({
                 "mod_id": mod["metadata"]["mod_id"],
-                "update": mod["update"],
-                "always_active": mod["always_active"]
+                "update": mod["update"]
             })
         with open(os.path.join(self.downloadPath, "modconfig.json"), 'r+') as f:
             f.truncate(0)
@@ -241,7 +236,7 @@ class AstroModLoader():
                 self.printModList = False
                 tabelData = []
                 tabelData.append(
-                    ["active", "mod name", "version", "author", "mod id", "update", "always active"])
+                    ["active", "mod name", "version", "author", "mod id", "update", "sync"])
 
                 for mod in self.mods:
                     tabelData.append([
@@ -251,14 +246,14 @@ class AstroModLoader():
                         mod["metadata"]["author"],
                         mod["metadata"]["mod_id"],
                         mod["update"],
-                        mod["always_active"]
+                        mod["metadata"]["sync"]
                     ])
 
                 table = SingleTable(tabelData, "Available mods")
                 print("")
                 print(table.table)
                 print(
-                    "commands: exit, activate, deactivate, update, alwaysactive, info, (server,) list, help)")
+                    "commands: exit, activate, deactivate, update, info, (server,) list, help)")
 
             cmd = input("> ")
 
@@ -277,11 +272,6 @@ class AstroModLoader():
                 if (mod := self.getInputMod()) is not None:
                     mod["update"] = input(
                         "should this mod be auto updated (True/False)? > ") == "True"
-                    self.printModList = True
-            elif cmd == "alwaysactive":
-                if (mod := self.getInputMod()) is not None:
-                    mod["always_active"] = input(
-                        "should this mod always be active (True/False)? > ") == "True"
                     self.printModList = True
             elif cmd == "info":
                 if (mod := self.getInputMod()) is not None:
@@ -305,9 +295,9 @@ class AstroModLoader():
             [
                 sg.Text("active", size=(4, 1)),
                 sg.Text("modname", size=(25, 1)),
-                sg.Text("author", size=(15, 1)),
                 sg.Text("version", size=(5, 1)),
-                sg.Text("always_active", size=(10, 1)),
+                sg.Text("author", size=(15, 1)),
+                sg.Text("sync", size=(10, 1)),
                 sg.Text("auto update", size=(10, 1))
             ]
         ]
@@ -319,10 +309,9 @@ class AstroModLoader():
                 sg.Checkbox("", size=(
                     2, 1), default=mod["installed"], enable_events=True, key="install_" + mod["metadata"]["mod_id"]),
                 sg.Text(mod["metadata"]["name"], size=(25, 1)),
-                sg.Text(mod["metadata"]["author"], size=(15, 1)),
                 sg.Text(mod["metadata"]["version"], size=(5, 1)),
-                sg.Checkbox("", size=(
-                    7, 1), default=mod["always_active"], enable_events=True, key="alwaysactive_" + mod["metadata"]["mod_id"]),
+                sg.Text(mod["metadata"]["author"], size=(15, 1)),
+                sg.Text(mod["metadata"]["sync"], size=(10, 1)),
                 sg.Checkbox("", size=(
                     2, 1), default=mod["update"], enable_events=True, key="update_" + mod["metadata"]["mod_id"]),
             ])
@@ -332,6 +321,8 @@ class AstroModLoader():
             sg.Text("loaded mods...", size=(40, 1), key="-message-"),
         ])
         layout.append([sg.Button('Close')])
+
+        # TODO server config
 
         window = sg.Window("Astroneer Mod Loader", layout)
 
@@ -350,13 +341,6 @@ class AstroModLoader():
                     "installed"] = values[event]
                 window["-message-"].update(
                     f"updated {event} to {values[event]}")
-
-            elif event.startswith("alwaysactive_"):
-                self.getModRef(event.split("_")[1])[
-                    "always_active"] = values[event]
-                window["-message-"].update(
-                    f"updated {event} to {values[event]}")
-
             elif event.startswith("update_"):
                 self.getModRef(event.split("_")[1])[
                     "update"] = values[event]
