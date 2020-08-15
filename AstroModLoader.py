@@ -191,16 +191,21 @@ class AstroModLoader():
         if self.gamePath != "":
             # do mod integration
             os.mkdir(os.path.join(self.downloadPath, "temp_mods"))
-            for mod in self.mods:
-                if not len(mod["metadata"]["linked_actor_components"]) == 0 and (mod["installed"]):
-                    shutil.copyfile(os.path.join(
-                        self.downloadPath, mod["filename"]), os.path.join(self.downloadPath, "temp_mods", mod["filename"]))
 
-            ModIntegrator.IntegrateMods(os.path.join(self.downloadPath, "temp_mods"),
-                os.path.join(self.gamePath, R"Astro\Content\Paks"))
+            try:
+                for mod in self.mods:
+                    if not len(mod["metadata"]["linked_actor_components"]) == 0 and (mod["installed"]):
+                        shutil.copyfile(os.path.join(
+                            self.downloadPath, mod["filename"]), os.path.join(self.downloadPath, "temp_mods", mod["filename"]))
 
-            shutil.copyfile(os.path.join(self.downloadPath, "temp_mods", "999-AstroModIntegrator_P.pak"),
-                os.path.join(self.installPath, "999-AstroModIntegrator_P.pak"))
+                ModIntegrator.IntegrateMods(os.path.join(self.downloadPath, "temp_mods"),
+                    os.path.join(self.gamePath, R"Astro\Content\Paks"))
+
+                shutil.copyfile(os.path.join(self.downloadPath, "temp_mods", "999-AstroModIntegrator_P.pak"),
+                    os.path.join(self.installPath, "999-AstroModIntegrator_P.pak"))
+            except Exception as err:
+                print("something went wrong during integration")
+                print(err)
             
             shutil.rmtree(os.path.join(self.downloadPath, "temp_mods"))
 
@@ -293,10 +298,10 @@ class AstroModLoader():
         layout = [
             [sg.Text("Availble mods:")],
             [
-                sg.Text("active", size=(4, 1)),
-                sg.Text("modname", size=(25, 1)),
-                sg.Text("version", size=(5, 1)),
-                sg.Text("author", size=(15, 1)),
+                sg.Text("Active", size=(4, 1)),
+                sg.Text("Modname", size=(25, 1)),
+                sg.Text("Version", size=(5, 1)),
+                sg.Text("Author", size=(15, 1)),
                 sg.Text("sync", size=(10, 1)),
                 sg.Text("auto update", size=(10, 1))
             ]
