@@ -29,7 +29,6 @@ Thanks to atenfyr for making the mod integrator part.
 
 - auto update mods
 - get server mods
-- validate game install path
 
 <!-- GETTING STARTED -->
 
