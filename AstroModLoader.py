@@ -408,7 +408,7 @@ class AstroModLoader():
                     exePath = sg.PopupGetFile("Choose astro.exe in game install directory", file_types=(('Astro.exe', 'Astro.exe'),))
                     if exePath is None:
                         break
-                    if exePath != "":
+                    if exePath != "" and os.path.isfile(exePath):
                         self.gamePath = os.path.dirname(exePath)
                         break
             else:
