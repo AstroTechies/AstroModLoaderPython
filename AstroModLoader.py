@@ -54,6 +54,8 @@ class AstroModLoader():
 
         self.downloadUpdates()
 
+        self.setGamePath()
+
         if self.gui:
             self.startGUI()
         else:
@@ -190,11 +192,7 @@ class AstroModLoader():
             os.remove(os.path.join(self.installPath, pak))
 
         # mod integration with some checks
-        if self.gamePath == "":
-            if not self.gui:
-                print(
-                    "no game path specified, mod integration won't be possible until one is specified in modconfig.json")
-        else:
+        if self.gamePath != "":
             # do mod integration
             os.mkdir(os.path.join(self.downloadPath, "temp_mods"))
             for mod in self.mods:
@@ -300,10 +298,6 @@ class AstroModLoader():
 
     def startGUI(self):
         print("gui go brrrrrrrr")
-
-        # get game path
-        if self.gamePath == "":
-            self.gamePath = sg.PopupGetFolder("choose game install directory")
 
         # create header
         layout = [
@@ -412,6 +406,20 @@ class AstroModLoader():
                 ppData = json.loads(PP.Unpack(mdFile).Data)
             return ppData
 
+    def setGamePath(self):
+        if self.gamePath != "" and not os.path.isfile(os.path.join(self.gamePath, "Astro.exe")):
+            self.gamePath == ""
+
+        if self.gamePath == "":
+            if self.gui:
+                
+                exePath = sg.PopupGetFile("Choose astro.exe in game install directory", file_types=(('Astro.exe', 'Astro.exe'),))
+                self.gamePath = os.path.dirname(exePath)
+
+            else:
+                print(
+                    "no game path specified, mod integration won't be possible until one is specified in modconfig.json")
+    
 
 if __name__ == "__main__":
     try:
