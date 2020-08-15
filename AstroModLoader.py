@@ -404,9 +404,13 @@ class AstroModLoader():
         if self.gamePath == "":
             if self.gui:
                 
-                exePath = sg.PopupGetFile("Choose astro.exe in game install directory", file_types=(('Astro.exe', 'Astro.exe'),))
-                self.gamePath = os.path.dirname(exePath)
-
+                while True:
+                    exePath = sg.PopupGetFile("Choose astro.exe in game install directory", file_types=(('Astro.exe', 'Astro.exe'),))
+                    if exePath is None:
+                        break
+                    if exePath != "":
+                        self.gamePath = os.path.dirname(exePath)
+                        break
             else:
                 print(
                     "no game path specified, mod integration won't be possible until one is specified in modconfig.json")
