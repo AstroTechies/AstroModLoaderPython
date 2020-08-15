@@ -113,7 +113,7 @@ class AstroModLoader():
             if "author" in metadata:
                 mod["metadata"]["author"] = metadata["author"]
             else:
-                mod["metadata"]["author"] = ""
+                mod["metadata"]["author"] = "---"
 
             if "description" in metadata:
                 mod["metadata"]["description"] = metadata["description"]
@@ -305,6 +305,7 @@ class AstroModLoader():
             [
                 sg.Text("active", size=(4, 1)),
                 sg.Text("modname", size=(25, 1)),
+                sg.Text("author", size=(15, 1)),
                 sg.Text("version", size=(5, 1)),
                 sg.Text("always_active", size=(10, 1)),
                 sg.Text("auto update", size=(10, 1))
@@ -318,6 +319,7 @@ class AstroModLoader():
                 sg.Checkbox("", size=(
                     2, 1), default=mod["installed"], enable_events=True, key="install_" + mod["metadata"]["mod_id"]),
                 sg.Text(mod["metadata"]["name"], size=(25, 1)),
+                sg.Text(mod["metadata"]["author"], size=(15, 1)),
                 sg.Text(mod["metadata"]["version"], size=(5, 1)),
                 sg.Checkbox("", size=(
                     7, 1), default=mod["always_active"], enable_events=True, key="alwaysactive_" + mod["metadata"]["mod_id"]),
