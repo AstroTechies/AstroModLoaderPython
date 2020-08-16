@@ -22,8 +22,10 @@ Thanks to atenfyr for making the mod integrator part.
 
 ## What does it do?
 
-1. Updates your mods
-2. Downloads mods for one dedicated server
+1. Allows you to manage your mods
+2. Takes care of mod integration
+3. Updates your mods
+4. Downloads mods for one dedicated server
 
 ## TODO
 
@@ -73,37 +75,18 @@ pipenv run python AstroModLoader.py
 
 ### Building an EXE
 
-1. If you want to turn this project into an executable, make sure to install pyinstaller using one of the following methods
-<!--
-
-```sh
-pip install pyinstaller
-```
-
-```sh
-pipenv install -d
-```
-
-2. Run pyinstaller with the all-in-one flag
-
-```sh
-pyinstaller AstroLauncher.py -F --add-data "assets;./assets" --icon=assets/astrolauncherlogo.ico
-```
-
-or -->
-just run the BuildEXE.py which automatically cleans up afterwards
+1. If you want to turn this project into an executable, make sure to install pyinstaller and run
 
 ```sh
 python BuildEXE.py
 ```
 
-<!--
-1. Move the executable (in the new `dist` folder) to the directory of your choice. (If you want you can now delete the `dist` and `build` folders, as well as the `.spec` file)
-2. Run AstroLauncher.exe
+2. Move the executable (in the new `dist` folder) to the directory of your choice. (If you want you can now delete the `dist` and `build` folders, as well as the `.spec` file)
+3. Run AstroModLoader.exe
 
 ```sh
-AstroLauncher.exe -p "steamapps\common\ASTRONEER Dedicated Server"
-```-->
+./AstroModLoader.exe [--no-gui]
+```
 
 <!-- CONTRIBUTING -->
 
