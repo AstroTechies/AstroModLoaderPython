@@ -48,6 +48,8 @@ class AstroModLoader():
             with open(os.path.join(self.downloadPath, "modconfig.json"), 'w') as f:
                 f.write('{"mods":[]}')
 
+        self.gamePath = ""
+
         print(f"Mod download folder: {self.downloadPath}")
 
         self.readModFiles()
@@ -72,7 +74,7 @@ class AstroModLoader():
         with open(os.path.join(self.downloadPath, "modconfig.json"), 'r') as f:
             self.modConfig = json.loads(f.read())
 
-        if "gamePath" in self.modConfig:
+        if self.gamePath != "" and "gamePath" in self.modConfig:
             self.gamePath = self.modConfig["gamePath"]
         else:
             self.gamePath = ""
