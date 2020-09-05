@@ -4,12 +4,16 @@ import numpy
 import shutil
 import json
 import argparse
-import clr
 from terminaltables import SingleTable
 import PySimpleGUI as sg
 
 from PyPAKParser import PakParser
 import cogs.AstroAPI as AstroAPI
+
+# force STA mode so that PySimpleGUI is happy
+import ctypes
+ctypes.windll.ole32.CoInitialize(None)
+import clr
 
 # deal with binary loading in .exe
 if hasattr(sys, "_MEIPASS"):
@@ -19,11 +23,10 @@ else:
 clr.AddReference("AstroModIntegrator")
 from AstroModIntegrator import ModIntegrator
 
-
+MOD_LOADER_VERSION = "0.1"
 class AstroModLoader():
-
     def __init__(self, gui):
-        print("Astro mod loader v0.1")
+        print("AstroModLoader v" + MOD_LOADER_VERSION)
 
         self.gui = gui
         sg.theme('Default1')
@@ -63,7 +66,7 @@ class AstroModLoader():
         else:
             self.startCli()
 
-        print("exiting...")
+        print("Exiting...")
 
     # ------------------
     #! STARTUP FUNCTIONS
@@ -74,13 +77,13 @@ class AstroModLoader():
         with open(os.path.join(self.downloadPath, "modconfig.json"), 'r') as f:
             self.modConfig = json.loads(f.read())
 
-        if self.gamePath != "" and "gamePath" in self.modConfig:
+        if "gamePath" in self.modConfig:
             self.gamePath = self.modConfig["gamePath"]
         else:
             self.gamePath = ""
 
         # gather mod list (only files)
-        print("gathering mod data...")
+        print("Gathering mod data...")
         self.mods = numpy.unique(self.getPaksInPath(
             self.downloadPath) + self.getPaksInPath(self.installPath))
 
@@ -175,14 +178,14 @@ class AstroModLoader():
                 0].split("-")[0]
 
             return mod
-        print("parsing metadata...")
+        print("Parsing metadata...")
         self.mods = list(map(readModData, self.mods))
 
     def downloadUpdates(self):
 
         # TODO download updates
 
-        print("downloading updates (not implemented)")
+        print("Downloading updates (not implemented)")
 
     def updateModInstallation(self):
         # clear install path
@@ -206,7 +209,7 @@ class AstroModLoader():
                 shutil.copyfile(os.path.join(self.downloadPath, "temp_mods", "999-AstroModIntegrator_P.pak"),
                     os.path.join(self.installPath, "999-AstroModIntegrator_P.pak"))
             except Exception as err:
-                print("something went wrong during integration")
+                print("Something went wrong during integration!")
                 print(err)
             
             shutil.rmtree(os.path.join(self.downloadPath, "temp_mods"))
@@ -227,11 +230,35 @@ class AstroModLoader():
         with open(os.path.join(self.downloadPath, "modconfig.json"), 'r+') as f:
             f.truncate(0)
         with open(os.path.join(self.downloadPath, "modconfig.json"), 'w') as f:
-            f.write(json.dumps({"mods": config, "gamePath": self.gamePath}))
+            f.write(json.dumps({"mods": config, "gamePath": self.gamePath}, indent=4))
 
     # --------------------
     #! INTERFACE FUNCTIONS
     # --------------------
+
+    def displayHelp(self, full_args):
+        if len(full_args) > 0:
+            if full_args[0] == "exit":
+                print("Usage: exit")
+            elif full_args[0] == "activate" or full_args[0] == "enable":
+                print("Usage: activate [mod ID]")
+            elif full_args[0] == "deactivate" or full_args[0] == "disable":
+                print("Usage: deactivate [mod ID]")
+            elif full_args[0] == "update":
+                print("Usage: update [mod ID] [y/n]")
+            elif full_args[0] == "info":
+                print("Usage: info [mod ID]")
+            elif full_args[0] == "server":
+                # TODO server mod downloading
+                print("Unimplemented")
+            elif full_args[0] == "list":
+                print("Usage: list")
+            elif full_args[0] == "help":
+                print("Usage: help [command]")
+            else:
+                print("Unknown command")
+        else:
+            print("Commands: exit, activate, deactivate, update, info, (server,) list, help")
 
     def startCli(self):
         self.printModList = True
@@ -243,7 +270,7 @@ class AstroModLoader():
                 self.printModList = False
                 tabelData = []
                 tabelData.append(
-                    ["active", "mod name", "version", "author", "mod id", "update", "sync"])
+                    ["Active", "Name", "Version", "Author", "Mod ID", "Update", "Sync"])
 
                 for mod in self.mods:
                     tabelData.append([
@@ -256,56 +283,63 @@ class AstroModLoader():
                         mod["metadata"]["sync"]
                     ])
 
-                table = SingleTable(tabelData, "Available mods")
+                table = SingleTable(tabelData, "Available Mods")
                 print("")
                 print(table.table)
-                print(
-                    "commands: exit, activate, deactivate, update, info, (server,) list, help)")
+                self.displayHelp([])
 
-            cmd = input("> ")
+            full_args = input("> ").split(" ")
+            cmd = full_args.pop(0)
 
             if cmd == "exit":
                 break
-            elif cmd == "activate":
-                if (mod := self.getInputMod()) is not None:
+            elif cmd == "activate" or cmd == "enable":
+                mod = self.getInputMod(full_args)
+                if mod is not None:
                     mod["installed"] = True
                     self.printModList = True
-
-            elif cmd == "deactivate":
-                if (mod := self.getInputMod()) is not None:
+            elif cmd == "deactivate" or cmd == "disable":
+                mod = self.getInputMod(full_args)
+                if mod is not None:
                     mod["installed"] = False
                     self.printModList = True
             elif cmd == "update":
-                if (mod := self.getInputMod()) is not None:
-                    mod["update"] = input(
-                        "should this mod be auto updated (True/False)? > ") == "True"
+                mod = self.getInputMod(full_args)
+                if mod is not None:
+                    if len(full_args) > 1:
+                        lower_param = full_args[1].lower()
+                        mod["update"] = lower_param == "y" or lower_param == "true"
+                    else:
+                        lower_param = input("Should this mod be auto updated (Y/N)? ").lower()
+                        mod["update"] = lower_param == "y" or lower_param == "true"
                     self.printModList = True
             elif cmd == "info":
-                if (mod := self.getInputMod()) is not None:
-                    print(mod)
+                mod = self.getInputMod(full_args)
+                if mod is not None:
+                    print(json.dumps(mod, indent=4))
             elif cmd == "server":
                 # TODO server mod downloading
                 print("not implemented yet")
             elif cmd == "list":
                 self.printModList = True
             elif cmd == "help":
-                print("*insert help text*")
+                self.displayHelp(full_args)
             else:
-                print("unknown command, use help for help")
+                print("Unknown command, use help for help")
 
     def startGUI(self):
         print("gui go brrrrrrrr")
 
         # create header
         layout = [
-            [sg.Text("Availble mods:")],
+            [sg.Text("Available Mods:")],
             [
                 sg.Text("Active", size=(4, 1)),
                 sg.Text("Modname", size=(25, 1)),
                 sg.Text("Version", size=(5, 1)),
                 sg.Text("Author", size=(15, 1)),
-                sg.Text("sync", size=(10, 1)),
-                sg.Text("auto update", size=(10, 1))
+                sg.Text("Sync", size=(10, 1)),
+                sg.Text("Auto update?", size=(10, 1))
             ]
         ]
 
@@ -325,13 +359,13 @@ class AstroModLoader():
 
         # create footer
         layout.append([
-            sg.Text("loaded mods...", size=(40, 1), key="-message-"),
+            sg.Text("Loaded mods.", size=(40, 1), key="-message-"),
         ])
         layout.append([sg.Button('Close')])
 
         # TODO server config
 
-        window = sg.Window("Astroneer Mod Loader", layout)
+        window = sg.Window("AstroModLoader v" + MOD_LOADER_VERSION, layout)
 
         # Create the event loop
         while True:
@@ -344,15 +378,19 @@ class AstroModLoader():
 
             # listen for checkboxes
             if event.startswith("install_"):
-                self.getModRef(event.split("_")[1])[
+                changing_mod = event.split("_")[1]
+                self.getModRef(changing_mod)[
                     "installed"] = values[event]
                 window["-message-"].update(
-                    f"updated {event} to {values[event]}")
+                    (f"Enabled" if values[event] else "Disabled") +
+                    f" {changing_mod}")
             elif event.startswith("update_"):
-                self.getModRef(event.split("_")[1])[
+                changing_mod = event.split("_")[1]
+                self.getModRef(changing_mod)[
                     "update"] = values[event]
                 window["-message-"].update(
-                    f"updated {event} to {values[event]}")
+                    (f"Enabled updating of" if values[event] else "Disabled updating of") +
+                    f" {changing_mod}")
             else:
                 print(f'Event: {event}')
                 print(str(values))
@@ -364,12 +402,17 @@ class AstroModLoader():
     #! HELPER FUNCTIONS
     # -----------------
 
-    def getInputMod(self):
-        mod = self.getModRef(input("which mod? (mod id) > "))
+    def getInputMod(self, full_args):
+        mod = None
+        if len(full_args) > 0:
+            mod = self.getModRef(full_args[0])
+        else:
+            mod = self.getModRef(input("Mod ID? "))
+
         if mod is not None:
             return mod
         else:
-            print("mod not found")
+            print("Failed to find a mod with that ID")
             return None
 
     def getModRef(self, mod_id):
@@ -400,27 +443,25 @@ class AstroModLoader():
             return ppData
 
     def setGamePath(self):
-        if self.gamePath != "" and not os.path.isfile(os.path.join(self.gamePath, "Astro.exe")):
-            self.gamePath == ""
+        if self.gamePath != "" and not os.path.isdir(self.gamePath):
+            self.gamePath = ""
 
         if self.gamePath == "":
             if self.gui:
-                
                 while True:
-                    exePath = sg.PopupGetFile("Choose astro.exe in game install directory", file_types=(('Astro.exe', 'Astro.exe'),))
-                    if exePath is None:
+                    installPath = sg.PopupGetFolder("Choose game installation directory")
+                    if installPath is None:
                         break
-                    if exePath != "" and os.path.isfile(exePath):
-                        self.gamePath = os.path.dirname(exePath)
+                    if installPath != "" and os.path.isdir(installPath):
+                        self.gamePath = installPath
                         break
             else:
                 print(
-                    "no game path specified, mod integration won't be possible until one is specified in modconfig.json")
-    
+                    "No game path specified, mod integration won't be possible until one is specified in modconfig.json")
 
 if __name__ == "__main__":
     try:
-        os.system("title AstroLauncher - Unofficial Dedicated Server Launcher")
+        os.system("title AstroModLoader v" + MOD_LOADER_VERSION)
     except:
         pass
     try:
