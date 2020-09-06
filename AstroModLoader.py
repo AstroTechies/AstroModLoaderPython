@@ -228,9 +228,9 @@ class AstroModLoader():
             if full_args[0] == "exit":
                 print("Usage: exit")
             elif full_args[0] == "activate" or full_args[0] == "enable":
-                print("Usage: activate [mod ID]")
+                print("Usage: enable [mod ID]")
             elif full_args[0] == "deactivate" or full_args[0] == "disable":
-                print("Usage: deactivate [mod ID]")
+                print("Usage: disable [mod ID]")
             elif full_args[0] == "update":
                 print("Usage: update [mod ID] [y/n]")
             elif full_args[0] == "info":
