@@ -32,6 +32,7 @@ class AstroModLoader():
         print("AstroModLoader v" + MOD_LOADER_VERSION)
 
         self.gui = gui
+        self.readonly = False
         sg.theme('Default1')
 
         # configure and store used paths
@@ -169,7 +170,18 @@ class AstroModLoader():
 
         print("Downloading updates (not implemented)")
 
+    def updateReadonly(self):
+        if not self.readonly:
+            try:
+                f = open(os.path.join(self.installPath, "999-AstroModIntegrator_P.pak"), "a")
+                f.close()
+            except IOError:
+                self.readonly = True
+
     def updateModInstallation(self):
+        if self.readonly:
+            return
+
         # clear install path
         for pak in self.getPaksInPath(self.installPath):
             os.remove(os.path.join(self.installPath, pak))
@@ -218,7 +230,6 @@ class AstroModLoader():
         with open(os.path.join(self.downloadPath, "modconfig.json"), 'w') as f:
             f.write(json.dumps({"mods": config, "game_path": self.gamePath}, indent=4))
 
-
     # --------------------
     #! INTERFACE FUNCTIONS
     # --------------------
@@ -249,9 +260,10 @@ class AstroModLoader():
 
     def startCli(self):
         self.printModList = True
+        self.updateReadonly()
         while True:
             self.updateModInstallation()
-
+            
             # list mods and commands
             if self.printModList:
                 self.printModList = False
@@ -278,35 +290,48 @@ class AstroModLoader():
             full_args = input("> ").split(" ")
             cmd = full_args.pop(0)
 
+            self.updateReadonly()
             if cmd == "exit":
                 break
             elif cmd == "activate" or cmd == "enable":
-                mod_id = self.getInputMod(full_args)
-                if mod_id is not None:
-                    self.mods[mod_id]["installed"] = True
-                    self.printModList = True
+                if self.readonly:
+                    print("You cannot modify mods in readonly mode.")
+                else:
+                    mod_id = self.getInputMod(full_args)
+                    if mod_id is not None:
+                        self.mods[mod_id]["installed"] = True
+                        self.printModList = True
             elif cmd == "deactivate" or cmd == "disable":
-                mod_id = self.getInputMod(full_args)
-                if mod_id is not None:
-                    self.mods[mod_id]["installed"] = False
-                    self.printModList = True
+                if self.readonly:
+                    print("You cannot modify mods in readonly mode.")
+                else:
+                    mod_id = self.getInputMod(full_args)
+                    if mod_id is not None:
+                        self.mods[mod_id]["installed"] = False
+                        self.printModList = True
             elif cmd == "update":
-                mod_id = self.getInputMod(full_args)
-                if mod_id is not None:
-                    if len(full_args) > 1:
-                        lower_param = full_args[1].lower()
-                        self.mods[mod_id]["update"] = lower_param == "y" or lower_param == "true"
-                    else:
-                        lower_param = input("Should this mod be auto updated (Y/N)? ").lower()
-                        self.mods[mod_id]["update"] = lower_param == "y" or lower_param == "true"
-                    self.printModList = True
+                if self.readonly:
+                    print("You cannot modify mods in readonly mode.")
+                else:
+                    mod_id = self.getInputMod(full_args)
+                    if mod_id is not None:
+                        if len(full_args) > 1:
+                            lower_param = full_args[1].lower()
+                            self.mods[mod_id]["update"] = lower_param == "y" or lower_param == "true"
+                        else:
+                            lower_param = input("Should this mod be auto updated (Y/N)? ").lower()
+                            self.mods[mod_id]["update"] = lower_param == "y" or lower_param == "true"
+                        self.printModList = True
             elif cmd == "info":
                 mod_id = self.getInputMod(full_args)
                 if mod_id is not None:
                     print(json.dumps(self.mods[mod_id], indent=4))
             elif cmd == "server":
-                # TODO server mod downloading
-                print("not implemented yet")
+                if self.readonly:
+                    print("You cannot modify mods in readonly mode.")
+                else:               
+                    # TODO server mod downloading
+                    print("not implemented yet")
             elif cmd == "list":
                 self.printModList = True
             elif cmd == "help":
@@ -330,19 +355,22 @@ class AstroModLoader():
             ]
         ]
 
+        checkboxes = []
+
         # create table
         # TODO add info button
         for mod_id in self.mods:
+            cbA = sg.Checkbox("", size=(2, 1), default=self.mods[mod_id]["installed"], enable_events=True, key="install_" + mod_id)
+            cbB = sg.Checkbox("", size=(2, 1), default=self.mods[mod_id]["update"], enable_events=True, key="update_" + mod_id)
             layout.append([
-                sg.Checkbox("", size=(
-                    2, 1), default=self.mods[mod_id]["installed"], enable_events=True, key="install_" + mod_id),
+                cbA,
                 sg.Text(self.mods[mod_id]["name"], size=(25, 1)),
                 sg.Text(self.mods[mod_id]["installed_version"], size=(5, 1)),
                 sg.Text(self.mods[mod_id]["author"], size=(15, 1)),
                 sg.Text(self.mods[mod_id]["sync"], size=(10, 1)),
-                sg.Checkbox("", size=(
-                    2, 1), default=self.mods[mod_id]["update"], enable_events=True, key="update_" + mod_id),
+                cbB
             ])
+            checkboxes.append([mod_id, cbA, cbB])
 
         # create footer
         layout.append([
@@ -353,34 +381,42 @@ class AstroModLoader():
         # TODO server config
 
         window = sg.Window("AstroModLoader v" + MOD_LOADER_VERSION, layout)
+        window.finalize()
 
         # Create the event loop
+        self.updateReadonly()
         while True:
             self.updateModInstallation()
-
+            if self.readonly:
+                for cb in checkboxes:
+                    cb[1].Update(value=self.mods[cb[0]]["installed"], disabled=True)
+                    cb[2].Update(value=self.mods[cb[0]]["update"], disabled=True)
+                checkboxes = [] # a restart of the loader is required to undo readonly mode
             event, values = window.read()
-
+            
             if event in (None, "Close"):
                 break
 
             # listen for checkboxes
-            if event.startswith("install_"):
-                changing_mod = event.split("_")[1]
-                self.mods[changing_mod]["installed"] = values[event]
-                
-                window["-message-"].update(
-                    (f"Enabled" if values[event] else "Disabled") +
-                    f" {changing_mod}")
-            elif event.startswith("update_"):
-                changing_mod = event.split("_")[1]
-                self.mods[changing_mod]["update"] = values[event]
+            self.updateReadonly()
+            if not self.readonly:
+                if event.startswith("install_"):
+                    changing_mod = event.split("_")[1]
+                    self.mods[changing_mod]["installed"] = values[event]
+                    
+                    window["-message-"].update(
+                        (f"Enabled" if values[event] else "Disabled") +
+                        f" {changing_mod}")
+                elif event.startswith("update_"):
+                    changing_mod = event.split("_")[1]
+                    self.mods[changing_mod]["update"] = values[event]
 
-                window["-message-"].update(
-                    (f"Enabled updating of" if values[event] else "Disabled updating of") +
-                    f" {changing_mod}")
-            else:
-                print(f'Event: {event}')
-                print(str(values))
+                    window["-message-"].update(
+                        (f"Enabled updating of" if values[event] else "Disabled updating of") +
+                        f" {changing_mod}")
+                else:
+                    print(f'Event: {event}')
+                    print(str(values))
 
             # TODO implement other buttons, like one for ore info
         window.close()
