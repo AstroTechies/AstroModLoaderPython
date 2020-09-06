@@ -77,13 +77,6 @@ class AstroModLoader():
         with open(os.path.join(self.downloadPath, "modconfig.json"), 'r') as f:
             self.modConfig = json.loads(f.read())
 
-        if self.gamePath != "":
-            pass
-        elif "game_path" in self.modConfig:
-            self.gamePath = self.modConfig["game_path"]
-        else:
-            self.gamePath = ""
-
         # gather mod list (only files)
         print("gathering mod data...")
         modFilenames = numpy.unique(self.getPaksInPath(
