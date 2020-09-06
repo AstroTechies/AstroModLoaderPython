@@ -216,7 +216,7 @@ class AstroModLoader():
         with open(os.path.join(self.downloadPath, "modconfig.json"), 'r+') as f:
             f.truncate(0)
         with open(os.path.join(self.downloadPath, "modconfig.json"), 'w') as f:
-            f.write(json.dumps({"mods": config, "game_ath": self.gamePath}, indent=4))
+            f.write(json.dumps({"mods": config, "game_path": self.gamePath}, indent=4))
 
 
     # --------------------
@@ -365,13 +365,15 @@ class AstroModLoader():
 
             # listen for checkboxes
             if event.startswith("install_"):
-                self.mods[event.split("_")[1]]["installed"] = values[event]
+                changing_mod = event.split("_")[1]
+                self.mods[changing_mod]["installed"] = values[event]
                 
                 window["-message-"].update(
                     (f"Enabled" if values[event] else "Disabled") +
                     f" {changing_mod}")
             elif event.startswith("update_"):
-                self.mods[event.split("_")[1]]["update"] = values[event]
+                changing_mod = event.split("_")[1]
+                self.mods[changing_mod]["update"] = values[event]
 
                 window["-message-"].update(
                     (f"Enabled updating of" if values[event] else "Disabled updating of") +
