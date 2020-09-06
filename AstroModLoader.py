@@ -245,7 +245,7 @@ class AstroModLoader():
             else:
                 print("Unknown command")
         else:
-            print("Commands: exit, activate, deactivate, update, info, (server,) list, help")
+            print("Commands: exit, enable, disable, update, info, (server,) list, help")
 
     def startCli(self):
         self.printModList = True
@@ -258,16 +258,16 @@ class AstroModLoader():
                 tabelData = []
                 tabelData.append(
                     ["Active", "Name", "Version", "Author", "Mod ID", "Update", "Sync"])
-
-                for mod in self.mods:
+                
+                for mod_id in self.mods:
                     tabelData.append([
-                        mod["installed"],
-                        mod["metadata"]["name"],
-                        mod["metadata"]["version"],
-                        mod["metadata"]["author"],
-                        mod["metadata"]["mod_id"],
-                        mod["update"],
-                        mod["metadata"]["sync"]
+                        self.mods[mod_id]["installed"],
+                        self.mods[mod_id]["name"],
+                        self.mods[mod_id]["installed_version"],
+                        self.mods[mod_id]["author"],
+                        mod_id,
+                        self.mods[mod_id]["update"],
+                        self.mods[mod_id]["sync"]
                     ])
 
                 table = SingleTable(tabelData, "Available Mods")
@@ -281,29 +281,29 @@ class AstroModLoader():
             if cmd == "exit":
                 break
             elif cmd == "activate" or cmd == "enable":
-                mod = self.getInputMod(full_args)
-                if mod is not None:
-                    mod["installed"] = True
+                mod_id = self.getInputMod(full_args)
+                if mod_id is not None:
+                    self.mods[mod_id]["installed"] = True
                     self.printModList = True
             elif cmd == "deactivate" or cmd == "disable":
-                mod = self.getInputMod(full_args)
-                if mod is not None:
-                    mod["installed"] = False
+                mod_id = self.getInputMod(full_args)
+                if mod_id is not None:
+                    self.mods[mod_id]["installed"] = False
                     self.printModList = True
             elif cmd == "update":
-                mod = self.getInputMod(full_args)
-                if mod is not None:
+                mod_id = self.getInputMod(full_args)
+                if mod_id is not None:
                     if len(full_args) > 1:
                         lower_param = full_args[1].lower()
-                        mod["update"] = lower_param == "y" or lower_param == "true"
+                        self.mods[mod_id]["update"] = lower_param == "y" or lower_param == "true"
                     else:
                         lower_param = input("Should this mod be auto updated (Y/N)? ").lower()
-                        mod["update"] = lower_param == "y" or lower_param == "true"
+                        self.mods[mod_id]["update"] = lower_param == "y" or lower_param == "true"
                     self.printModList = True
             elif cmd == "info":
-                mod = self.getInputMod(full_args)
-                if mod is not None:
-                    print(json.dumps(mod, indent=4))
+                mod_id = self.getInputMod(full_args)
+                if mod_id is not None:
+                    print(json.dumps(self.mods[mod_id], indent=4))
             elif cmd == "server":
                 # TODO server mod downloading
                 print("not implemented yet")
@@ -390,26 +390,16 @@ class AstroModLoader():
     # -----------------
 
     def getInputMod(self, full_args):
-        mod = None
+        mod_id = None
         if len(full_args) > 0:
-            mod = self.getModRef(full_args[0])
+            mod_id = full_args[0]
         else:
-            mod = self.getModRef(input("Mod ID? "))
+            mod_id = input("Mod ID? ")
 
-        if mod is not None:
-            return mod
+        if mod_id in self.mods:
+            return mod_id
         else:
             print("Failed to find a mod with that ID")
-            return None
-
-    def getModRef(self, mod_id):
-        mod = None
-        for m in self.mods:
-            if m["metadata"]["mod_id"] == mod_id:
-                mod = m
-        if mod is not None:
-            return mod
-        else:
             return None
 
     def getPaksInPath(self, path):
