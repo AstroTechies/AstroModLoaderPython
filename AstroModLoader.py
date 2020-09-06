@@ -183,8 +183,12 @@ class AstroModLoader():
             return
 
         # clear install path
-        for pak in self.getPaksInPath(self.installPath):
-            os.remove(os.path.join(self.installPath, pak))
+        try:
+            for pak in self.getPaksInPath(self.installPath):
+                os.remove(os.path.join(self.installPath, pak))
+        except PermissionError:
+            self.readonly = True
+            return
 
         # mod integration with some checks
         if self.gamePath != "":
