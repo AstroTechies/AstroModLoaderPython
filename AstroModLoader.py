@@ -6,12 +6,15 @@ import json
 import argparse
 import clr
 from terminaltables import SingleTable
+from pprint import pprint
 import PySimpleGUI as sg
 
 from PyPAKParser import PakParser
 import cogs.AstroAPI as AstroAPI
 
 # deal with binary loading in .exe
+# pylint: disable=no-member
+# pylint: disable=import-error
 if hasattr(sys, "_MEIPASS"):
     sys.path.append(os.path.join(sys._MEIPASS, "dlls"))
 else:
@@ -74,109 +77,96 @@ class AstroModLoader():
         with open(os.path.join(self.downloadPath, "modconfig.json"), 'r') as f:
             self.modConfig = json.loads(f.read())
 
-        if self.gamePath != "" and "gamePath" in self.modConfig:
-            self.gamePath = self.modConfig["gamePath"]
+        if self.gamePath != "":
+            pass
+        elif "game_path" in self.modConfig:
+            self.gamePath = self.modConfig["game_path"]
         else:
             self.gamePath = ""
 
         # gather mod list (only files)
         print("gathering mod data...")
-        self.mods = numpy.unique(self.getPaksInPath(
+        modFilenames = numpy.unique(self.getPaksInPath(
             self.downloadPath) + self.getPaksInPath(self.installPath))
 
-        self.mods = list(map(lambda m: {"filename": m}, self.mods))
+        print("parsing metadata...")
+        self.mods = {}
+        for modFilename in modFilenames:
 
-        def readModData(mod):
-            # check mod if it is installed
-            mod["installed"] = os.path.isfile(
-                os.path.join(self.installPath, mod["filename"]))
-
-            # copy mods only install dir to download dir
-            if not os.path.isfile(os.path.join(self.downloadPath, mod["filename"])):
+            # copy mods files only install dir to download dir
+            if not os.path.isfile(os.path.join(self.downloadPath, modFilename)):
                 shutil.copyfile(os.path.join(
-                    self.installPath, mod["filename"]), os.path.join(self.downloadPath, mod["filename"]))
+                    self.installPath, modFilename), os.path.join(self.downloadPath, modFilename))
 
             # read metadata
-            mod["metadata"] = {}
             metadata = self.getMetadata(os.path.join(
-                self.downloadPath, mod["filename"]))
+                self.downloadPath, modFilename))
 
-            if "name" in metadata:
-                mod["metadata"]["name"] = metadata["name"]
-            else:
-                mod["metadata"]["name"] = mod["filename"]
-
+            # get mod_id
+            mod_id = ""
             if "mod_id" in metadata:
-                mod["metadata"]["mod_id"] = metadata["mod_id"]
+                mod_id = metadata["mod_id"]
             else:
-                mod["metadata"]["mod_id"] = mod["filename"].split("_")[
-                    0].split("-")[1]
+                mod_id = modFilename.split("_")[0].split("-")[1]
 
-            if "author" in metadata:
-                mod["metadata"]["author"] = metadata["author"]
-            else:
-                mod["metadata"]["author"] = "---"
+            # check if it's the first instance
+            if not mod_id in self.mods:
+                self.mods[mod_id] = {"mod_id": mod_id}
 
-            if "description" in metadata:
-                mod["metadata"]["description"] = metadata["description"]
-            else:
-                mod["metadata"]["description"] = ""
-
-            if "version" in metadata:
-                mod["metadata"]["version"] = metadata["version"]
-            else:
-                if len(mod["filename"].split("_")[0].split("-")) == 3:
-                    mod["metadata"]["version"] = mod["filename"].split("_")[
-                        0].split("-")[2]
+            # field name, default
+            dataFields = (
+                ("name", modFilename),
+                ("author", "---"),
+                ("description", ""),
+                ("astro_build", "1.0.0.0"),
+                ("sync", "serverclient"),
+                ("homepage", ""),
+                ("download", {}),
+                ("linked_actor_components", {})
+            )
+            for dataField in dataFields:
+                if dataField[0] in metadata:
+                    self.mods[mod_id][dataField[0]] = metadata[dataField[0]]
                 else:
-                    mod["metadata"]["version"] = "---"
+                    self.mods[mod_id][dataField[0]] = dataField[1]
 
-            if "astro_build" in metadata:
-                mod["metadata"]["astro_build"] = metadata["astro_build"]
-            else:
-                mod["metadata"]["astro_build"] = "1.0.0.0"
-
-            if "sync" in metadata:
-                mod["metadata"]["sync"] = metadata["sync"]
-            else:
-                mod["metadata"]["sync"] = "serverclient"
+            # sync special case
             if metadata == {}:
-                mod["metadata"]["sync"] = "client"
-
-            if "homepage" in metadata:
-                mod["metadata"]["homepage"] = metadata["homepage"]
-            else:
-                mod["metadata"]["homepage"] = ""
-
-            if "download" in metadata:
-                mod["metadata"]["download"] = metadata["download"]
-            else:
-                mod["metadata"]["download"] = {}
-
-            if "linked_actor_components" in metadata:
-                mod["metadata"]["linked_actor_components"] = metadata["linked_actor_components"]
-            else:
-                mod["metadata"]["linked_actor_components"] = {}
-
-            # read data from modconfig.json
-            config = list(
-                filter(lambda m: m["mod_id"] == mod["metadata"]["mod_id"], self.modConfig["mods"]))
-            if len(config):
-                config = config[0]
-                if "update" in config:
-                    mod["update"] = config["update"]
-                else:
-                    mod["update"] = True
-            else:
-                mod["update"] = True
+                self.mods[mod_id]["sync"] = "client"
 
             # read priority
-            mod["metadata"]["priority"] = mod["filename"].split("_")[
-                0].split("-")[0]
+            self.mods[mod_id]["priority"] = modFilename.split("_")[0].split("-")[0]
 
-            return mod
-        print("parsing metadata...")
-        self.mods = list(map(readModData, self.mods))
+            # versions
+            version = ""
+            if "version" in metadata:
+                version = metadata["version"]
+            else:
+                version = self.getVersionFromFilename(modFilename)
+
+            if not "versions" in self.mods[mod_id]:
+                self.mods[mod_id]["versions"] = {}
+
+            self.mods[mod_id]["versions"][version] = { "filename": modFilename }
+            
+            # check if mod is installed
+            if os.path.isfile(os.path.join(self.installPath, modFilename)):
+                self.mods[mod_id]["installed_version"] = version   
+                
+            # read data from modconfig.json
+            if mod_id in self.modConfig["mods"]:
+                self.mods[mod_id]["update"] = self.modConfig["mods"][mod_id]["update"]
+            else:
+                self.mods[mod_id]["update"] = False
+
+        # check which version is active
+        for mod_id in self.mods:
+            self.mods[mod_id]["installed"] = "installed_version" in self.mods[mod_id]
+            if not self.mods[mod_id]["installed"]:
+                self.mods[mod_id]["installed_version"] = sorted(list(self.mods[mod_id]["versions"].keys()))[-1]
+        
+        # pprint(self.mods)
+
 
     def downloadUpdates(self):
 
@@ -195,10 +185,12 @@ class AstroModLoader():
             os.mkdir(os.path.join(self.downloadPath, "temp_mods"))
 
             try:
-                for mod in self.mods:
-                    if not len(mod["metadata"]["linked_actor_components"]) == 0 and (mod["installed"]):
-                        shutil.copyfile(os.path.join(
-                            self.downloadPath, mod["filename"]), os.path.join(self.downloadPath, "temp_mods", mod["filename"]))
+                for mod_id in self.mods:
+                    filename = self.mods[mod_id]["versions"][
+                        self.mods[mod_id]["installed_version"
+                    ]]["filename"]
+                    if not len(self.mods[mod_id]["linked_actor_components"]) == 0 and (self.mods[mod_id]["installed"]):
+                        shutil.copyfile(os.path.join(self.downloadPath, filename), os.path.join(self.downloadPath, "temp_mods", filename))
 
                 ModIntegrator.IntegrateMods(os.path.join(self.downloadPath, "temp_mods"),
                     os.path.join(self.gamePath, R"Astro\Content\Paks"))
@@ -212,22 +204,24 @@ class AstroModLoader():
             shutil.rmtree(os.path.join(self.downloadPath, "temp_mods"))
 
         # load all previously active mods back into mod path (with changes)
-        for mod in self.mods:
-            if mod["installed"]:
+        for mod_id in self.mods:
+            filename = self.mods[mod_id]["versions"][
+                self.mods[mod_id]["installed_version"
+            ]]["filename"]
+            if self.mods[mod_id]["installed"]:
                 shutil.copyfile(os.path.join(
-                    self.downloadPath, mod["filename"]), os.path.join(self.installPath, mod["filename"]))
+                    self.downloadPath, filename), os.path.join(self.installPath, filename))
 
         # write modconfig.json
-        config = []
-        for mod in self.mods:
-            config.append({
-                "mod_id": mod["metadata"]["mod_id"],
-                "update": mod["update"]
-            })
+        config = {}
+        for mod_id in self.mods:
+            config[mod_id] = {
+                "update": self.mods[mod_id]["update"]
+            }
         with open(os.path.join(self.downloadPath, "modconfig.json"), 'r+') as f:
             f.truncate(0)
         with open(os.path.join(self.downloadPath, "modconfig.json"), 'w') as f:
-            f.write(json.dumps({"mods": config, "gamePath": self.gamePath}))
+            f.write(json.dumps({"mods": config, "game_path": self.gamePath}))
 
     # --------------------
     #! INTERFACE FUNCTIONS
@@ -311,16 +305,16 @@ class AstroModLoader():
 
         # create table
         # TODO add info button
-        for mod in self.mods:
+        for mod_id in self.mods:
             layout.append([
                 sg.Checkbox("", size=(
-                    2, 1), default=mod["installed"], enable_events=True, key="install_" + mod["metadata"]["mod_id"]),
-                sg.Text(mod["metadata"]["name"], size=(25, 1)),
-                sg.Text(mod["metadata"]["version"], size=(5, 1)),
-                sg.Text(mod["metadata"]["author"], size=(15, 1)),
-                sg.Text(mod["metadata"]["sync"], size=(10, 1)),
+                    2, 1), default=self.mods[mod_id]["installed"], enable_events=True, key="install_" + mod_id),
+                sg.Text(self.mods[mod_id]["name"], size=(25, 1)),
+                sg.Text(self.mods[mod_id]["installed_version"], size=(5, 1)),
+                sg.Text(self.mods[mod_id]["author"], size=(15, 1)),
+                sg.Text(self.mods[mod_id]["sync"], size=(10, 1)),
                 sg.Checkbox("", size=(
-                    2, 1), default=mod["update"], enable_events=True, key="update_" + mod["metadata"]["mod_id"]),
+                    2, 1), default=self.mods[mod_id]["update"], enable_events=True, key="update_" + mod_id),
             ])
 
         # create footer
@@ -344,20 +338,18 @@ class AstroModLoader():
 
             # listen for checkboxes
             if event.startswith("install_"):
-                self.getModRef(event.split("_")[1])[
-                    "installed"] = values[event]
+                self.mods[event.split("_")[1]]["installed"] = values[event]
                 window["-message-"].update(
                     f"updated {event} to {values[event]}")
             elif event.startswith("update_"):
-                self.getModRef(event.split("_")[1])[
-                    "update"] = values[event]
+                self.mods[event.split("_")[1]]["update"] = values[event]
                 window["-message-"].update(
                     f"updated {event} to {values[event]}")
             else:
                 print(f'Event: {event}')
                 print(str(values))
 
-            # TODO implement other buttons
+            # TODO implement other buttons, like one for ore info
         window.close()
 
     # -----------------
@@ -399,7 +391,16 @@ class AstroModLoader():
                 ppData = json.loads(PP.Unpack(mdFile).Data)
             return ppData
 
+    def getVersionFromFilename(self, filename):
+        if len(filename.split("_")[0].split("-")) == 3:
+            return filename.split("_")[0].split("-")[2]
+        else:
+            return "---"
+
     def setGamePath(self):
+        if self.gamePath == "" and "game_path" in self.modConfig:
+            self.gamePath = self.modConfig["game_path"]
+
         if self.gamePath != "" and not os.path.isfile(os.path.join(self.gamePath, "Astro.exe")):
             self.gamePath == ""
 
