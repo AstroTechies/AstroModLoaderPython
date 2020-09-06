@@ -173,7 +173,10 @@ class AstroModLoader():
     def updateReadonly(self):
         if not self.readonly:
             try:
-                f = open(os.path.join(self.installPath, "999-AstroModIntegrator_P.pak"), "a")
+                targetPath = os.path.join(self.installPath, "999-AstroModIntegrator_P.pak")
+                if not os.path.isfile(targetPath):
+                    return
+                f = open(targetPath, "a")
                 f.close()
             except IOError:
                 self.readonly = True
