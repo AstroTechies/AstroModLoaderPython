@@ -67,10 +67,11 @@ class AstroModLoader():
 
         self.setGamePath()
 
-        if self.gui:
-            self.startGUI()
-        else:
-            self.startCli()
+        if not self.updateOnly:
+            if self.gui:
+                self.startGUI()
+            else:
+                self.startCli()
 
         print("Exiting...")
 
@@ -199,7 +200,7 @@ class AstroModLoader():
         if self.gamePath != "":
             # do mod integration
             os.mkdir(os.path.join(self.downloadPath, "temp_mods"))
-            
+
             try:
                 for mod_id in self.mods:
                     filename = self.mods[mod_id]["versions"][
