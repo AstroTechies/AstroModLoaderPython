@@ -28,25 +28,27 @@ from AstroModIntegrator import ModIntegrator
 
 MOD_LOADER_VERSION = "0.1"
 class AstroModLoader():
-    def __init__(self, gui):
+    def __init__(self, gui, serverMode, updateOnly):
         print("AstroModLoader v" + MOD_LOADER_VERSION)
 
         self.gui = gui
-        self.readonly = False
         sg.theme('Default1')
 
+        self.serverMode = serverMode
+        self.updateOnly = updateOnly
+        self.readonly = False
+
         # configure and store used paths
-        self.basePath = os.path.join(
-            os.getenv('LOCALAPPDATA'), "Astro")
+        self.basePath = os.getenv('LOCALAPPDATA') if not self.serverMode else os.getcwd()
 
         self.downloadPath = os.path.join(
-            self.basePath, "Saved")
+            self.basePath, "Astro", "Saved")
         if not os.path.exists(os.path.join(self.downloadPath, "Mods")):
             os.makedirs(os.path.join(self.downloadPath, "Mods"))
         self.downloadPath = os.path.join(self.downloadPath, "Mods")
 
         self.installPath = os.path.join(
-            self.basePath, "Saved")
+            self.basePath, "Astro", "Saved")
         if not os.path.exists(os.path.join(self.installPath, "Paks")):
             os.makedirs(os.path.join(self.installPath, "Paks"))
         self.installPath = os.path.join(self.installPath, "Paks")
@@ -55,7 +57,7 @@ class AstroModLoader():
             with open(os.path.join(self.downloadPath, "modconfig.json"), 'w') as f:
                 f.write('{"mods":[]}')
 
-        self.gamePath = ""
+        self.gamePath = "" if not self.serverMode else os.getcwd()
 
         print(f"Mod download folder: {self.downloadPath}")
 
@@ -197,7 +199,7 @@ class AstroModLoader():
         if self.gamePath != "":
             # do mod integration
             os.mkdir(os.path.join(self.downloadPath, "temp_mods"))
-
+            
             try:
                 for mod_id in self.mods:
                     filename = self.mods[mod_id]["versions"][
@@ -500,9 +502,15 @@ if __name__ == "__main__":
         parser.add_argument('--no-gui', dest='gui', action='store_false')
         parser.set_defaults(gui=True)
 
+        parser.add_argument('--server', dest='server', action='store_true')
+        parser.set_defaults(server=False)
+
+        parser.add_argument('--update', dest='update', action='store_true')
+        parser.set_defaults(update=False)
+
         args = parser.parse_args()
 
-        AstroModLoader(args.gui)
+        AstroModLoader(args.gui, args.server, args.update)
     except KeyboardInterrupt:
         pass
     # except Exception as err:
