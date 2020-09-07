@@ -171,7 +171,16 @@ class AstroModLoader():
 
         # TODO download updates
 
-        print("Downloading updates (not implemented)")
+        print("Downloading updates")
+        for mod_id in self.mods:
+            if self.mods[mod_id]["download"] != {}:
+                downloadData = self.mods[mod_id]["download"]
+                if downloadData["type"] == "github_repository":
+                    print(mod_id + ": github repo")
+                elif downloadData["type"] == "index_file":
+                    print(mod_id + ": index file")
+                else:
+                    print(mod_id + ": incorrect download type")
 
     def updateReadonly(self):
         if not self.readonly:
