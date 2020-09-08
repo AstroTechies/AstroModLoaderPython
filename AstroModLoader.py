@@ -157,7 +157,7 @@ class AstroModLoader():
             if mod_id in self.modConfig["mods"]:
                 self.mods[mod_id]["update"] = self.modConfig["mods"][mod_id]["update"]
             else:
-                self.mods[mod_id]["update"] = False
+                self.mods[mod_id]["update"] = True
 
         # check which version is active
         for mod_id in self.mods:
