@@ -29,8 +29,10 @@ Thanks to atenfyr for making the mod integrator part.
 
 ## TODO
 
-- auto update mods
 - get server mods
+- button for more info on one mod
+- use logging module
+- show all available versions
 
 <!-- GETTING STARTED -->
 
