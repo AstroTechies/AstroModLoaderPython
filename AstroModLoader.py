@@ -425,7 +425,7 @@ class AstroModLoader():
         layout.append([
             sg.Text("Loaded mods.", size=(40, 1), key="-message-"),
         ])
-        layout.append([sg.Button('Close')])
+        layout.append([sg.Exit()])
 
         # TODO server config
 
@@ -443,7 +443,7 @@ class AstroModLoader():
                 checkboxes = [] # a restart of the loader is required to undo readonly mode
             event, values = window.read()
             
-            if event in (None, "Close"):
+            if event in (None, "Exit"):
                 break
 
             # listen for checkboxes
