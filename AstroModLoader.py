@@ -88,7 +88,6 @@ class AstroModLoader():
 
         # gather mod list (only files)
         modFilenames = numpy.unique(self.getPaksInPath(
-
             self.downloadPath) + self.getPaksInPath(self.installPath))
 
         print("Parsing metadata...")
@@ -153,19 +152,19 @@ class AstroModLoader():
             
             # check if mod is installed
             if os.path.isfile(os.path.join(self.installPath, modFilename)):
-                self.mods[mod_id]["installed_version"] = version   
-                
+                self.mods[mod_id]["installed"] = True   
+
             # read data from modconfig.json
             if mod_id in self.modConfig["mods"]:
                 self.mods[mod_id]["update"] = self.modConfig["mods"][mod_id]["update"]
+                self.mods[mod_id]["version"] = self.modConfig["mods"][mod_id]["version"]
             else:
                 self.mods[mod_id]["update"] = True
+                self.mods[mod_id]["version"] = "latest"
 
-        # check which version is active
+        # fill missing installed
         for mod_id in self.mods:
-            self.mods[mod_id]["installed"] = "installed_version" in self.mods[mod_id]
-            if not self.mods[mod_id]["installed"]:
-                self.mods[mod_id]["installed_version"] = sorted(list(self.mods[mod_id]["versions"].keys()))[-1]
+            self.mods[mod_id]["installed"] = True if "installed" in self.mods[mod_id] else False
         
         # pprint(self.mods)
 
@@ -175,7 +174,7 @@ class AstroModLoader():
 
         print("Downloading updates")
         for mod_id in self.mods:
-            if self.mods[mod_id]["download"] != {}:
+            if self.mods[mod_id]["download"] != {} and self.mods[mod_id]["update"]:
                 downloadData = self.mods[mod_id]["download"]
 
                 if downloadData["type"] == "github_repository":
@@ -188,7 +187,7 @@ class AstroModLoader():
                         r = requests.get(downloadData["url"])
                         modData = r.json()["mods"][mod_id]
 
-                        if self.mods[mod_id]["installed_version"] != modData["latest_version"]:
+                        if not modData["latest_version"] in self.mods[mod_id]["versions"]:
                             print(f"[INFO] {mod_id} not up to date, downloading...")
                             
                             v = modData["versions"][modData["latest_version"]]
@@ -198,7 +197,6 @@ class AstroModLoader():
                                 r.raw.decode_content = True
                                 shutil.copyfileobj(r.raw, f)
 
-                            self.mods[mod_id]["installed_version"] = modData["latest_version"]
                             self.mods[mod_id]["versions"][modData["latest_version"]] = { "filename": v["filename"] }
 
                         else:
@@ -210,7 +208,7 @@ class AstroModLoader():
                     print(f"[ERROR] {mod_id}: incorrect download type")
             
             else:
-                print(f"[INFO] {mod_id} no update info available")
+                print(f"[INFO] {mod_id} no update info available or disabled")
 
     def updateReadonly(self):
         if not self.readonly:
@@ -242,10 +240,10 @@ class AstroModLoader():
 
             try:
                 for mod_id in self.mods:
-                    filename = self.mods[mod_id]["versions"][
-                        self.mods[mod_id]["installed_version"
-                    ]]["filename"]
-                    if not len(self.mods[mod_id]["linked_actor_components"]) == 0 and (self.mods[mod_id]["installed"]):
+                    version = self.getLatestVersion(mod_id) if self.mods[mod_id]["version"] == "latest" else self.mods[mod_id]["version"]
+                    filename = self.mods[mod_id]["versions"][version]["filename"]
+
+                    if self.mods[mod_id]["linked_actor_components"] != {} and (self.mods[mod_id]["installed"]):
                         shutil.copyfile(os.path.join(self.downloadPath, filename), os.path.join(self.downloadPath, "temp_mods", filename))
 
                 ModIntegrator.IntegrateMods(os.path.join(self.downloadPath, "temp_mods"),
@@ -253,17 +251,17 @@ class AstroModLoader():
 
                 shutil.copyfile(os.path.join(self.downloadPath, "temp_mods", "999-AstroModIntegrator_P.pak"),
                     os.path.join(self.installPath, "999-AstroModIntegrator_P.pak"))
-            except Exception as err:
-                print("Something went wrong during integration!")
-                print(err)
+            except Exception:
+                print("[ERROR] Something went wrong during integration!")
+                traceback.print_exc()
             
             shutil.rmtree(os.path.join(self.downloadPath, "temp_mods"))
 
         # load all previously active mods back into mod path (with changes)
         for mod_id in self.mods:
-            filename = self.mods[mod_id]["versions"][
-                self.mods[mod_id]["installed_version"
-            ]]["filename"]
+            version = self.getLatestVersion(mod_id) if self.mods[mod_id]["version"] == "latest" else self.mods[mod_id]["version"]
+            filename = self.mods[mod_id]["versions"][version]["filename"]
+            
             if self.mods[mod_id]["installed"]:
                 shutil.copyfile(os.path.join(
                     self.downloadPath, filename), os.path.join(self.installPath, filename))
@@ -272,7 +270,8 @@ class AstroModLoader():
         config = {}
         for mod_id in self.mods:
             config[mod_id] = {
-                "update": self.mods[mod_id]["update"]
+                "update": self.mods[mod_id]["update"],
+                "version": self.mods[mod_id]["version"]
             }
         with open(os.path.join(self.downloadPath, "modconfig.json"), 'r+') as f:
             f.truncate(0)
@@ -324,7 +323,7 @@ class AstroModLoader():
                     tabelData.append([
                         self.mods[mod_id]["installed"],
                         self.mods[mod_id]["name"],
-                        self.mods[mod_id]["installed_version"],
+                        self.mods[mod_id]["version"],
                         self.mods[mod_id]["author"],
                         mod_id,
                         self.mods[mod_id]["update"],
@@ -397,10 +396,10 @@ class AstroModLoader():
             [
                 sg.Text("Active", size=(4, 1)),
                 sg.Text("Modname", size=(25, 1)),
-                sg.Text("Version", size=(5, 1)),
+                sg.Text("Version", size=(15, 1)),
                 sg.Text("Author", size=(15, 1)),
                 sg.Text("Sync", size=(10, 1)),
-                sg.Text("Auto update?", size=(10, 1))
+                sg.Text("Download updates?", size=(10, 1))
             ]
         ]
 
@@ -409,12 +408,23 @@ class AstroModLoader():
         # create table
         # TODO add info button
         for mod_id in self.mods:
-            cbA = sg.Checkbox("", size=(2, 1), default=self.mods[mod_id]["installed"], enable_events=True, key="install_" + mod_id)
-            cbB = sg.Checkbox("", size=(2, 1), default=self.mods[mod_id]["update"], enable_events=True, key="update_" + mod_id)
+            cbA = sg.Checkbox("", size=(2, 1), default=self.mods[mod_id]["installed"], enable_events=True, key=f"install_{mod_id}")
+            cbB = sg.Checkbox("", size=(2, 1), default=self.mods[mod_id]["update"], enable_events=True, key=f"update_{mod_id}")
+
+            if not "---" in self.mods[mod_id]["versions"]:
+                latestText = f"Latest ({self.getLatestVersion(mod_id)})"
+                versions = [latestText]
+                for v in list(self.mods[mod_id]["versions"].keys()):
+                    versions.append(v)
+                versionDrop = sg.Combo(versions, default_value=latestText if self.mods[mod_id]["version"] == "latest" else self.mods[mod_id]["version"],
+                    enable_events=True, key=f"version_{mod_id}", size=(15, 1))
+            else:
+                versionDrop = sg.Text("---", size=(15, 1))
+
             layout.append([
                 cbA,
                 sg.Text(self.mods[mod_id]["name"], size=(25, 1)),
-                sg.Text(self.mods[mod_id]["installed_version"], size=(5, 1)),
+                versionDrop,
                 sg.Text(self.mods[mod_id]["author"], size=(15, 1)),
                 sg.Text(self.mods[mod_id]["sync"], size=(10, 1)),
                 cbB
@@ -423,7 +433,7 @@ class AstroModLoader():
 
         # create footer
         layout.append([
-            sg.Text("Loaded mods.", size=(40, 1), key="-message-"),
+            sg.Text("Loaded mods.", size=(40, 1), key="-message-")
         ])
         layout.append([sg.Exit()])
 
@@ -463,6 +473,13 @@ class AstroModLoader():
                     window["-message-"].update(
                         (f"Enabled updating of" if values[event] else "Disabled updating of") +
                         f" {changing_mod}")
+
+                elif event.startswith("version"):
+                    changing_mod = event.split("_")[1]
+                    self.mods[changing_mod]["version"] = values[event] if not values[event].startswith("Latest") else "latest"
+
+                    window["-message-"].update(f"Set version of {changing_mod} to {self.mods[changing_mod]['version']}")
+                
                 else:
                     print(f'Event: {event}')
                     print(str(values))
@@ -509,6 +526,9 @@ class AstroModLoader():
             return filename.split("_")[0].split("-")[2]
         else:
             return "---"
+
+    def getLatestVersion(self, mod_id):
+        return sorted(list(self.mods[mod_id]["versions"].keys()))[-1]
 
     def setGamePath(self):
         if self.gamePath == "" and "game_path" in self.modConfig:
