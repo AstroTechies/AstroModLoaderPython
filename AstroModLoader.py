@@ -6,8 +6,9 @@ import json
 import argparse
 import requests
 import traceback
+import logging
 from terminaltables import SingleTable
-from pprint import pprint
+import pprint
 import PySimpleGUI as sg
 
 from PyPAKParser import PakParser
@@ -23,15 +24,17 @@ import clr
 # pylint: disable=import-error
 if hasattr(sys, "_MEIPASS"):
     sys.path.append(os.path.join(sys._MEIPASS, "dlls"))
+    logging.basicConfig(format="[%(levelname)s] %(message)s", level=logging.INFO)
 else:
     sys.path.append("dlls")
+    logging.basicConfig(format="[%(levelname)s] %(message)s", level=logging.DEBUG)
 clr.AddReference("AstroModIntegrator")
 from AstroModIntegrator import ModIntegrator
 
 MOD_LOADER_VERSION = "0.1"
 class AstroModLoader():
     def __init__(self, gui, serverMode, updateOnly):
-        print("AstroModLoader v" + MOD_LOADER_VERSION)
+        logging.info("AstroModLoader v" + MOD_LOADER_VERSION)
 
         self.gui = gui
         sg.theme('Default1')
@@ -61,7 +64,7 @@ class AstroModLoader():
 
         self.gamePath = "" if not self.serverMode else os.getcwd()
 
-        print(f"Mod download folder: {self.downloadPath}")
+        logging.debug(f"Mod download folder: {self.downloadPath}")
 
         self.readModFiles()
 
@@ -75,7 +78,7 @@ class AstroModLoader():
             else:
                 self.startCli()
 
-        print("Exiting...")
+        logging.info("Exiting...")
 
     # ------------------
     #! STARTUP FUNCTIONS
@@ -90,7 +93,7 @@ class AstroModLoader():
         modFilenames = numpy.unique(self.getPaksInPath(
             self.downloadPath) + self.getPaksInPath(self.installPath))
 
-        print("Parsing metadata...")
+        logging.info("Parsing metadata...")
         self.mods = {}
         for modFilename in modFilenames:
 
@@ -166,29 +169,29 @@ class AstroModLoader():
         for mod_id in self.mods:
             self.mods[mod_id]["installed"] = True if "installed" in self.mods[mod_id] else False
         
-        # pprint(self.mods)
+        logging.debug(pprint.pformat(self.mods))
 
     def downloadUpdates(self):
 
-        print("Downloading updates")
+        logging.info("Downloading updates...")
         for mod_id in self.mods:
             if self.mods[mod_id]["download"] != {} and self.mods[mod_id]["update"]:
                 downloadData = self.mods[mod_id]["download"]
 
                 if downloadData["type"] == "github_repository":
-                    print(f"[INFO] {mod_id}: github repo")
+                    logging.debug(f"{mod_id}: github repo")
 
                     # TODO github updates
 
                 elif downloadData["type"] == "index_file":
-                    print(f"[INFO] {mod_id}: index file")
+                    logging.debug(f"{mod_id}: index file")
 
                     try:
                         r = requests.get(downloadData["url"])
                         modData = r.json()["mods"][mod_id]
 
                         if not modData["latest_version"] in self.mods[mod_id]["versions"]:
-                            print(f"[INFO] {mod_id} not up to date, downloading...")
+                            logging.info(f"{mod_id} not up to date, downloading...")
                             
                             v = modData["versions"][modData["latest_version"]]
                             r = requests.get(v["download_url"], stream=True)
@@ -200,15 +203,15 @@ class AstroModLoader():
                             self.mods[mod_id]["versions"][modData["latest_version"]] = { "filename": v["filename"] }
 
                         else:
-                            print(f"[INFO] {mod_id} up to date")
+                            logging.debug(f"{mod_id} up to date")
                     except Exception:
-                        print(f"[ERROR] while updating {mod_id}")
+                        logging.error(f"[ERROR] while updating {mod_id}")
                         traceback.print_exc()
                 else:
-                    print(f"[ERROR] {mod_id}: incorrect download type")
+                    logging.warning(f"{mod_id}: incorrect download type")
             
             else:
-                print(f"[INFO] {mod_id} no update info available or disabled")
+                logging.debug(f"{mod_id} no update info available or disabled")
 
     def updateReadonly(self):
         if not self.readonly:
@@ -252,7 +255,7 @@ class AstroModLoader():
                 shutil.copyfile(os.path.join(self.downloadPath, "temp_mods", "999-AstroModIntegrator_P.pak"),
                     os.path.join(self.installPath, "999-AstroModIntegrator_P.pak"))
             except Exception:
-                print("[ERROR] Something went wrong during integration!")
+                logging.error("Something went wrong during integration!")
                 traceback.print_exc()
             
             shutil.rmtree(os.path.join(self.downloadPath, "temp_mods"))
@@ -388,7 +391,7 @@ class AstroModLoader():
                 print("Unknown command, use help for help")
 
     def startGUI(self):
-        print("gui go brrrrrrrr")
+        logging.info("gui go brrrrrrrr")
 
         # create header
         layout = [
@@ -489,8 +492,8 @@ class AstroModLoader():
                     window["-message-"].update(f"Set version of {changing_mod} to {self.mods[changing_mod]['version']}")
                 
                 else:
-                    print(f'Event: {event}')
-                    print(str(values))
+                    logging.debug(f'Event: {event}')
+                    logging.debug(str(values))
 
             # TODO implement other buttons, like one for ore info
         window.close()
