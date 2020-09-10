@@ -4,6 +4,8 @@ import numpy
 import shutil
 import json
 import argparse
+import requests
+import traceback
 from terminaltables import SingleTable
 from pprint import pprint
 import PySimpleGUI as sg
@@ -175,12 +177,40 @@ class AstroModLoader():
         for mod_id in self.mods:
             if self.mods[mod_id]["download"] != {}:
                 downloadData = self.mods[mod_id]["download"]
+
                 if downloadData["type"] == "github_repository":
-                    print(mod_id + ": github repo")
+                    print(f"[INFO] {mod_id}: github repo")
+
                 elif downloadData["type"] == "index_file":
-                    print(mod_id + ": index file")
+                    print(f"[INFO] {mod_id}: index file")
+
+                    try:
+                        r = requests.get(downloadData["url"])
+                        modData = r.json()["mods"][mod_id]
+
+                        if self.mods[mod_id]["installed_version"] != modData["latest_version"]:
+                            print(f"[INFO] {mod_id} not up to date, downloading...")
+                            
+                            v = modData["versions"][modData["latest_version"]]
+                            r = requests.get(v["download_url"], stream=True)
+
+                            with open(os.path.join(self.downloadPath, v["filename"]), "wb") as f:
+                                r.raw.decode_content = True
+                                shutil.copyfileobj(r.raw, f)
+
+                            self.mods[mod_id]["installed_version"] = modData["latest_version"]
+                            self.mods[mod_id]["versions"][modData["latest_version"]] = { "filename": v["filename"] }
+
+                        else:
+                            print(f"[INFO] {mod_id} up to date")
+                    except Exception:
+                        print(f"[ERROR] while updating {mod_id}")
+                        traceback.print_exc()
                 else:
-                    print(mod_id + ": incorrect download type")
+                    print(f"[ERROR] {mod_id}: incorrect download type")
+            
+            else:
+                print(f"[INFO] {mod_id} no update info available")
 
     def updateReadonly(self):
         if not self.readonly:
