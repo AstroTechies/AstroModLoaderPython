@@ -170,8 +170,6 @@ class AstroModLoader():
 
     def downloadUpdates(self):
 
-        # TODO download updates
-
         print("Downloading updates")
         for mod_id in self.mods:
             if self.mods[mod_id]["download"] != {} and self.mods[mod_id]["update"]:
@@ -179,6 +177,8 @@ class AstroModLoader():
 
                 if downloadData["type"] == "github_repository":
                     print(f"[INFO] {mod_id}: github repo")
+
+                    # TODO github updates
 
                 elif downloadData["type"] == "index_file":
                     print(f"[INFO] {mod_id}: index file")
@@ -399,7 +399,7 @@ class AstroModLoader():
                 sg.Text("Version", size=(15, 1)),
                 sg.Text("Author", size=(15, 1)),
                 sg.Text("Sync", size=(10, 1)),
-                sg.Text("Download updates?", size=(10, 1))
+                sg.Text("Download updates?", size=(15, 1))
             ]
         ]
 
@@ -408,18 +408,26 @@ class AstroModLoader():
         # create table
         # TODO add info button
         for mod_id in self.mods:
-            cbA = sg.Checkbox("", size=(2, 1), default=self.mods[mod_id]["installed"], enable_events=True, key=f"install_{mod_id}")
-            cbB = sg.Checkbox("", size=(2, 1), default=self.mods[mod_id]["update"], enable_events=True, key=f"update_{mod_id}")
+            cbA = sg.Checkbox("   ", default=self.mods[mod_id]["installed"], enable_events=True, key=f"install_{mod_id}")
+            cbB = sg.Checkbox("   ", default=self.mods[mod_id]["update"], enable_events=True, key=f"update_{mod_id}", disabled=self.mods[mod_id]["download"] == {})
 
             if not "---" in self.mods[mod_id]["versions"]:
-                latestText = f"Latest ({self.getLatestVersion(mod_id)})"
-                versions = [latestText]
-                for v in list(self.mods[mod_id]["versions"].keys()):
+                
+                if self.mods[mod_id]["download"] != {}:
+                    defaultText = f"Latest ({self.getLatestVersion(mod_id)})"
+                    versions = [defaultText]
+                else:
+                    versions = []
+                    defaultText = ""
+                for v in list(self.mods[mod_id]["versions"].keys())[::-1]:
                     versions.append(v)
-                versionDrop = sg.Combo(versions, default_value=latestText if self.mods[mod_id]["version"] == "latest" else self.mods[mod_id]["version"],
+                if defaultText == "":
+                    defaultText = versions[0]
+
+                versionDrop = sg.Combo(versions, default_value=defaultText if self.mods[mod_id]["version"] == "latest" else self.mods[mod_id]["version"],
                     enable_events=True, key=f"version_{mod_id}", size=(15, 1))
             else:
-                versionDrop = sg.Text("---", size=(15, 1))
+                versionDrop = sg.Combo([""], size=(15, 1), disabled=True)
 
             layout.append([
                 cbA,
