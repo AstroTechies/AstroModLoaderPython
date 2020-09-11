@@ -31,7 +31,6 @@ Thanks to atenfyr for making the mod integrator part.
 
 - get server mods
 - button for more info on one mod
-- show all available versions
 
 <!-- GETTING STARTED -->
 
