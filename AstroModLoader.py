@@ -24,16 +24,20 @@ import clr
 # pylint: disable=import-error
 if hasattr(sys, "_MEIPASS"):
     sys.path.append(os.path.join(sys._MEIPASS, "dlls"))
-    logging.basicConfig(format="[%(levelname)s] %(message)s", level=logging.INFO)
 else:
     sys.path.append("dlls")
-    logging.basicConfig(format="[%(levelname)s] %(message)s", level=logging.DEBUG)
+    
 clr.AddReference("AstroModIntegrator")
 from AstroModIntegrator import ModIntegrator
 
 MOD_LOADER_VERSION = "0.1"
 class AstroModLoader():
-    def __init__(self, gui, serverMode, updateOnly):
+    def __init__(self, gui, serverMode, updateOnly, debugMode):
+        if debugMode or not hasattr(sys, "_MEIPASS"):
+            logging.basicConfig(format="[%(levelname)s] %(message)s", level=logging.DEBUG)
+        else:
+            logging.basicConfig(format="[%(levelname)s] %(message)s", level=logging.INFO)
+
         logging.info("AstroModLoader v" + MOD_LOADER_VERSION)
 
         self.gui = gui
@@ -190,20 +194,9 @@ class AstroModLoader():
                         r = requests.get(downloadData["url"])
                         modData = r.json()["mods"][mod_id]
 
-                        if not modData["latest_version"] in self.mods[mod_id]["versions"]:
-                            logging.info(f"{mod_id} not up to date, downloading...")
-                            
-                            v = modData["versions"][modData["latest_version"]]
-                            r = requests.get(v["download_url"], stream=True)
+                        # simply overwrite the local versions with the remote one
+                        self.mods[mod_id]["versions"] = modData["versions"]
 
-                            with open(os.path.join(self.downloadPath, v["filename"]), "wb") as f:
-                                r.raw.decode_content = True
-                                shutil.copyfileobj(r.raw, f)
-
-                            self.mods[mod_id]["versions"][modData["latest_version"]] = { "filename": v["filename"] }
-
-                        else:
-                            logging.debug(f"{mod_id} up to date")
                     except Exception:
                         logging.error(f"[ERROR] while updating {mod_id}")
                         traceback.print_exc()
@@ -263,11 +256,23 @@ class AstroModLoader():
         # load all previously active mods back into mod path (with changes)
         for mod_id in self.mods:
             version = self.getLatestVersion(mod_id) if self.mods[mod_id]["version"] == "latest" else self.mods[mod_id]["version"]
-            filename = self.mods[mod_id]["versions"][version]["filename"]
+            versionData = self.mods[mod_id]["versions"][version]
             
             if self.mods[mod_id]["installed"]:
+                # download mod file if not locally available
+                if not os.path.isfile(os.path.join(self.downloadPath, versionData["filename"])):
+                    logging.info(f"Downloading {mod_id} {version} ...")
+
+                    r = requests.get(versionData["download_url"], stream=True)
+                    with open(os.path.join(self.downloadPath, versionData["filename"]), "wb") as f:
+                        r.raw.decode_content = True
+                        shutil.copyfileobj(r.raw, f)
+
+                    logging.debug("download finished")
+
+                # copy from \Mods to \Paks
                 shutil.copyfile(os.path.join(
-                    self.downloadPath, filename), os.path.join(self.installPath, filename))
+                    self.downloadPath, versionData["filename"]), os.path.join(self.installPath, versionData["filename"]))
 
         # write modconfig.json
         config = {}
@@ -579,9 +584,12 @@ if __name__ == "__main__":
         parser.add_argument('--update', dest='update', action='store_true')
         parser.set_defaults(update=False)
 
+        parser.add_argument('--debug', dest='debug', action='store_true')
+        parser.set_defaults(debug=False)
+
         args = parser.parse_args()
 
-        AstroModLoader(args.gui, args.server, args.update)
+        AstroModLoader(args.gui, args.server, args.update, args.debug)
     except KeyboardInterrupt:
         pass
     # except Exception as err:
