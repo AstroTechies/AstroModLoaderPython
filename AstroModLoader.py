@@ -543,8 +543,13 @@ class AstroModLoader():
         else:
             return "---"
 
-    def getLatestVersion(self, mod_id):
-        return sorted(list(self.mods[mod_id]["versions"].keys()))[-1]
+    def getLatestVersion(self, mod_id):     
+        return self.sortVersions(list(self.mods[mod_id]["versions"].keys()))[-1]
+
+    def sortVersions(self, versions_list):
+        if len(versions_list) > 1:
+            versions_list.sort(key=lambda s: list(map(int, s.split('.'))))
+        return versions_list
 
     def setGamePath(self):
         if self.gamePath == "" and "game_path" in self.modConfig:
