@@ -167,7 +167,10 @@ class AstroModLoader():
                 self.mods[mod_id]["version"] = self.modConfig["mods"][mod_id]["version"]
             else:
                 self.mods[mod_id]["update"] = self.mods[mod_id]["download"] != {}
-                self.mods[mod_id]["version"] = "latest"
+                if self.mods[mod_id]["download"] == {}:
+                    self.mods[mod_id]["version"] = self.getLatestVersion(mod_id)
+                else:
+                    self.mods[mod_id]["version"] = "latest"
 
         # fill missing installed
         for mod_id in self.mods:
