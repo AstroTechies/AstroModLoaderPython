@@ -234,6 +234,8 @@ class AstroModLoader():
 
         # mod integration with some checks
         if self.gamePath != "":
+            logging.debug("Doing mod integration")
+
             # do mod integration
             os.mkdir(os.path.join(self.downloadPath, "temp_mods"))
 
