@@ -201,8 +201,8 @@ class AstroModLoader():
                         self.mods[mod_id]["versions"] = modData["versions"]
 
                     except Exception:
-                        logging.error(f"[ERROR] while updating {mod_id}")
-                        traceback.print_exc()
+                        logging.error(f"An exception occured while updating {mod_id}")
+                        logging.debug(traceback.format_exc())
                 else:
                     logging.warning(f"{mod_id}: incorrect download type")
             
@@ -264,14 +264,19 @@ class AstroModLoader():
             versionData = self.mods[mod_id]["versions"][version]
             
             if self.mods[mod_id]["installed"]:
-                # download mod file if not locally available
+                # --------
+                # DOWNLOAD mod file if not locally available
                 if not os.path.isfile(os.path.join(self.downloadPath, versionData["filename"])):
                     logging.info(f"Downloading {mod_id} {version} ...")
 
-                    r = requests.get(versionData["download_url"], stream=True)
-                    with open(os.path.join(self.downloadPath, versionData["filename"]), "wb") as f:
-                        r.raw.decode_content = True
-                        shutil.copyfileobj(r.raw, f)
+                    try:
+                        r = requests.get(versionData["download_url"], stream=True)
+                        with open(os.path.join(self.downloadPath, versionData["filename"]), "wb") as f:
+                            r.raw.decode_content = True
+                            shutil.copyfileobj(r.raw, f)
+                    except Exception:
+                        logging.error(f"An exception occured while downloading {mod_id}")
+                        logging.debug(traceback.format_exc())
 
                     logging.debug("download finished")
 
