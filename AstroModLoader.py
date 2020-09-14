@@ -344,7 +344,7 @@ class AstroModLoader():
                         self.mods[mod_id]["version"],
                         self.mods[mod_id]["author"],
                         mod_id,
-                        self.mods[mod_id]["update"],
+                        self.mods[mod_id]["update"] if self.mods[mod_id]["download"] != {} else "---",
                         self.mods[mod_id]["sync"]
                     ])
 
@@ -381,13 +381,16 @@ class AstroModLoader():
                 else:
                     mod_id = self.getInputMod(full_args)
                     if mod_id is not None:
-                        if len(full_args) > 1:
-                            lower_param = full_args[1].lower()
-                            self.mods[mod_id]["update"] = lower_param == "y" or lower_param == "true"
+                        if self.mods[mod_id]["download"] != {}:
+                            if len(full_args) > 1:
+                                lower_param = full_args[1].lower()
+                                self.mods[mod_id]["update"] = lower_param == "y" or lower_param == "true"
+                            else:
+                                lower_param = input("Should this mod be auto updated (Y/N)? ").lower()
+                                self.mods[mod_id]["update"] = lower_param == "y" or lower_param == "true"
+                            self.printModList = True
                         else:
-                            lower_param = input("Should this mod be auto updated (Y/N)? ").lower()
-                            self.mods[mod_id]["update"] = lower_param == "y" or lower_param == "true"
-                        self.printModList = True
+                            print("This mod has no download data so their is no reason to change this field.")
             elif cmd == "info":
                 mod_id = self.getInputMod(full_args)
                 if mod_id is not None:
