@@ -622,19 +622,18 @@ if __name__ == "__main__":
     except:
         pass
     try:
-        parser = argparse.ArgumentParser()
+        parser = argparse.ArgumentParser(description="AstroModLoader - Manage, integrate and update Astroneer Mods")
 
-        parser.add_argument('--gui', dest='gui', action='store_true')
-        parser.add_argument('--no-gui', dest='gui', action='store_false')
+        parser.add_argument('--no-gui', dest='gui', action='store_false', help="Don't launch the GUI and instead launch the cli.")
         parser.set_defaults(gui=True)
 
-        parser.add_argument('--server', dest='server', action='store_true')
+        parser.add_argument('--server', dest='server', action='store_true', help="Server mode. In this mode the base dir is the current dir and not the one under localappdata.")
         parser.set_defaults(server=False)
 
-        parser.add_argument('--update', dest='update', action='store_true')
+        parser.add_argument('--update', dest='update', action='store_true', help="Only update mods, don't launch any interface.")
         parser.set_defaults(update=False)
 
-        parser.add_argument('--debug', dest='debug', action='store_true')
+        parser.add_argument('--debug', dest='debug', action='store_true', help="Print full logs.")
         parser.set_defaults(debug=False)
 
         args = parser.parse_args()
