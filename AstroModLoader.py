@@ -310,6 +310,8 @@ class AstroModLoader():
                 print("Usage: disable [mod ID]")
             elif full_args[0] == "update":
                 print("Usage: update [mod ID] [y/n]")
+            elif full_args[0] == "version":
+                print("Usage: version [mod ID] [version]")    
             elif full_args[0] == "info":
                 print("Usage: info [mod ID]")
             elif full_args[0] == "server":
@@ -322,7 +324,7 @@ class AstroModLoader():
             else:
                 print("Unknown command")
         else:
-            print("Commands: exit, enable, disable, update, info, (server,) list, help")
+            print("Commands: exit, enable, disable, version, update, info, (server,) list, help")
 
     def startCli(self):
         self.printModList = True
@@ -375,6 +377,30 @@ class AstroModLoader():
                     if mod_id is not None:
                         self.mods[mod_id]["installed"] = False
                         self.printModList = True
+            elif cmd == "version":
+                if self.readonly:
+                    print("You cannot modify mods in readonly mode.")
+                else:
+                    mod_id = self.getInputMod(full_args)
+                    if mod_id is not None:
+                        if len(self.mods[mod_id]["versions"]) > 1:
+                            versions = [*(["latest"] if self.mods[mod_id]["download"] != {} else []), *self.mods[mod_id]["versions"].keys()]
+                            if len(full_args) > 1:
+                                version = full_args[1]
+                            else:
+                                print(f"Available versions for this mod are: {versions}")
+                                version = input("Choose version: ")
+
+                            if version in versions:
+                                print(f"Setting version to {version}")
+                                self.mods[mod_id]["version"] = version
+
+                                self.printModList = True
+                            else:
+                                print("This version is not available")
+                            
+                        else:
+                            print("This mod has only one version so their is no reason to change this field.")
             elif cmd == "update":
                 if self.readonly:
                     print("You cannot modify mods in readonly mode.")
@@ -384,10 +410,10 @@ class AstroModLoader():
                         if self.mods[mod_id]["download"] != {}:
                             if len(full_args) > 1:
                                 lower_param = full_args[1].lower()
-                                self.mods[mod_id]["update"] = lower_param == "y" or lower_param == "true"
                             else:
-                                lower_param = input("Should this mod be auto updated (Y/N)? ").lower()
-                                self.mods[mod_id]["update"] = lower_param == "y" or lower_param == "true"
+                                lower_param = input("Should this mod be auto updated (Y/N)? ").lower()               
+                            self.mods[mod_id]["update"] = lower_param == "y" or lower_param == "true"
+
                             self.printModList = True
                         else:
                             print("This mod has no download data so their is no reason to change this field.")
