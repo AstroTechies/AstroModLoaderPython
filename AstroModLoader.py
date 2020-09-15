@@ -30,7 +30,7 @@ else:
 clr.AddReference("AstroModIntegrator")
 from AstroModIntegrator import ModIntegrator
 
-MOD_LOADER_VERSION = "0.1"
+MOD_LOADER_VERSION = "0.2.0"
 class AstroModLoader():
     def __init__(self, gui, serverMode, updateOnly, debugMode):
         if debugMode or not hasattr(sys, "_MEIPASS"):
