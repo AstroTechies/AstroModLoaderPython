@@ -593,7 +593,12 @@ class AstroModLoader():
 
     def sortVersions(self, versions_list):
         if len(versions_list) > 1:
-            versions_list.sort(key=lambda s: list(map(int, s.split('.'))))
+            try:
+                versions_list.sort(key=lambda s: list(map(int, s.split('.'))))
+            except Exception:
+                logging.warning("A mod has incorrect version numbering")
+                # fallback to alphabetical sort
+                versions_list.sort()
         return versions_list
 
     def setGamePath(self):
