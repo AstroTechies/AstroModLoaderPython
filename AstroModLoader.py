@@ -180,7 +180,7 @@ class AstroModLoader():
 
     def downloadUpdates(self):
 
-        logging.info("Downloading updates...")
+        logging.info("Checking for updates...")
         for mod_id in self.mods:
             if self.mods[mod_id]["download"] != {} and self.mods[mod_id]["update"]:
                 downloadData = self.mods[mod_id]["download"]
