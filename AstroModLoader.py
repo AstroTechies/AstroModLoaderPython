@@ -340,10 +340,16 @@ class AstroModLoader():
                     ["Active", "Name", "Version", "Author", "Mod ID", "Update", "Sync"])
                 
                 for mod_id in self.mods:
+                    numVersions = len(self.mods[mod_id]['versions']) + (int(self.mods[mod_id]['download'] != {}))
+                    version = self.mods[mod_id]["version"] + (
+                        f" + {numVersions - 1}"
+                        if numVersions > 1
+                        else ""
+                    )
                     tabelData.append([
                         self.mods[mod_id]["installed"],
                         self.mods[mod_id]["name"],
-                        self.mods[mod_id]["version"],
+                        version,
                         self.mods[mod_id]["author"],
                         mod_id,
                         self.mods[mod_id]["update"] if self.mods[mod_id]["download"] != {} else "---",
