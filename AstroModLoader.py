@@ -315,8 +315,7 @@ class AstroModLoader():
             elif full_args[0] == "info":
                 print("Usage: info [mod ID]")
             elif full_args[0] == "server":
-                # TODO server mod downloading
-                print("Unimplemented")
+                print("Usage: server [IP:Port]")
             elif full_args[0] == "list":
                 print("Usage: list")
             elif full_args[0] == "help":
@@ -431,8 +430,12 @@ class AstroModLoader():
                 if self.readonly:
                     print("You cannot modify mods in readonly mode.")
                 else:               
-                    # TODO server mod downloading
-                    print("not implemented yet")
+                    if len(full_args) > 0:
+                        IP = full_args[0]
+                    else:
+                        IP = input("server IP:Port? ")
+                    
+                    self.configureForServer(IP)
             elif cmd == "list":
                 self.printModList = True
             elif cmd == "help":
@@ -552,11 +555,8 @@ class AstroModLoader():
                     popupText += f"Download Data: \n{json.dumps(m['download'], indent=2)}"
                     sg.Popup(popupText, title="Mod Info")
 
-                #("download", {}),
-                #("linked_actor_components", {})
-
                 elif event == "server_config":
-                    print("server config")
+                    self.configureForServer(sg.PopupGetText("Enter server IP:Port"))
                 
                 else:
                     logging.debug(f'Event: {event}')
@@ -637,10 +637,9 @@ class AstroModLoader():
                 print(
                     "No game path specified, mod integration won't be possible until one is specified in modconfig.json")
 
-    def configureForServer(self, ip):
-        
+    def configureForServer(self, IP):       
         # TODO server config
-        print(f"Server config {ip} (unimplemented)")
+        logging.info(f"Server config {IP} (unimplemented)")
 
 if __name__ == "__main__":
     try:

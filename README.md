@@ -30,7 +30,6 @@ Thanks to atenfyr for making the mod integrator part.
 ## TODO
 
 - get server mods
-- button for more info on one mod
 
 <!-- GETTING STARTED -->
 
