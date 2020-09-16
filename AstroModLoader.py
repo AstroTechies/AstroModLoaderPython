@@ -459,10 +459,9 @@ class AstroModLoader():
         checkboxes = []
 
         # create table
-        # TODO add info button
         for mod_id in self.mods:
             cbA = sg.Checkbox("   ", default=self.mods[mod_id]["installed"], enable_events=True, key=f"install_{mod_id}")
-            cbB = sg.Checkbox("   ", default=self.mods[mod_id]["update"], enable_events=True, key=f"update_{mod_id}", disabled=self.mods[mod_id]["download"] == {})
+            cbB = sg.Checkbox("", default=self.mods[mod_id]["update"], enable_events=True, key=f"update_{mod_id}", disabled=self.mods[mod_id]["download"] == {})
 
             if not "---" in self.mods[mod_id]["versions"]:
                 
@@ -484,7 +483,7 @@ class AstroModLoader():
 
             layout.append([
                 cbA,
-                sg.Text(self.mods[mod_id]["name"], size=(25, 1)),
+                sg.Text(self.mods[mod_id]["name"], enable_events=True, key=f"info_{mod_id}", size=(25, 1)),
                 versionDrop,
                 sg.Text(self.mods[mod_id]["author"], size=(15, 1)),
                 sg.Text(self.mods[mod_id]["sync"], size=(10, 1)),
@@ -496,9 +495,7 @@ class AstroModLoader():
         layout.append([
             sg.Text("Loaded mods.", size=(40, 1), key="-message-")
         ])
-        layout.append([sg.Exit()])
-
-        # TODO server config
+        layout.append([sg.Exit(), sg.Button("Configure for server", key="server_config")])
 
         window = sg.Window("AstroModLoader v" + MOD_LOADER_VERSION, layout)
         window.finalize()
@@ -535,17 +532,36 @@ class AstroModLoader():
                         (f"Enabled updating of" if values[event] else "Disabled updating of") +
                         f" {changing_mod}")
 
-                elif event.startswith("version"):
+                elif event.startswith("version_"):
                     changing_mod = event.split("_")[1]
                     self.mods[changing_mod]["version"] = values[event] if not values[event].startswith("Latest") else "latest"
 
                     window["-message-"].update(f"Set version of {changing_mod} to {self.mods[changing_mod]['version']}")
+
+                elif event.startswith("info_"):
+                    mod_id = event.split("_")[1]
+                    m = self.mods[mod_id]
+                    popupText = f"Mod info for {m['name']}\n\n\n"
+                    popupText += f"Mod ID: {mod_id}\n\n"
+                    popupText += f"Author: {m['author']}\n\n"
+                    popupText += f"Astro Build: {m['astro_build']}\n\n"
+                    popupText += f"Sync: {m['sync']}\n\n"
+                    popupText += f"Homepage: {m['homepage']}\n\n"
+                    popupText += f"Description: \n{m['description']}\n\n"
+                    popupText += f"Versions: \n{json.dumps(m['versions'], indent=2)}\n\n"
+                    popupText += f"Download Data: \n{json.dumps(m['download'], indent=2)}"
+                    sg.Popup(popupText, title="Mod Info")
+
+                #("download", {}),
+                #("linked_actor_components", {})
+
+                elif event == "server_config":
+                    print("server config")
                 
                 else:
                     logging.debug(f'Event: {event}')
                     logging.debug(str(values))
 
-            # TODO implement other buttons, like one for ore info
         window.close()
 
     # -----------------
@@ -620,6 +636,11 @@ class AstroModLoader():
             else:
                 print(
                     "No game path specified, mod integration won't be possible until one is specified in modconfig.json")
+
+    def configureForServer(self, ip):
+        
+        # TODO server config
+        print(f"Server config {ip} (unimplemented)")
 
 if __name__ == "__main__":
     try:
