@@ -197,9 +197,10 @@ class AstroModLoader():
                         r = requests.get(downloadData["url"])
                         modData = r.json()["mods"][mod_id]
 
-                        # simply overwrite the local versions with the remote one
-                        self.mods[mod_id]["versions"] = modData["versions"]
-
+                        # merge the local versions with the remote one
+                        for v in modData["versions"]:
+                            self.mods[mod_id]["versions"][v] = modData["versions"][v]
+                        
                     except Exception:
                         logging.error(f"An exception occured while updating {mod_id}")
                         logging.debug(traceback.format_exc())
@@ -474,7 +475,7 @@ class AstroModLoader():
                 else:
                     versions = []
                     defaultText = ""
-                for v in list(self.mods[mod_id]["versions"].keys())[::-1]:
+                for v in self.sortVersions(list(self.mods[mod_id]["versions"].keys()))[::-1]:
                     versions.append(v)
                 if defaultText == "":
                     defaultText = versions[0]
