@@ -164,7 +164,13 @@ class AstroModLoader():
             # read data from modconfig.json
             if mod_id in self.modConfig["mods"]:
                 self.mods[mod_id]["update"] = self.modConfig["mods"][mod_id]["update"]
-                self.mods[mod_id]["version"] = self.modConfig["mods"][mod_id]["version"]
+                if self.modConfig["mods"][mod_id]["version"] in self.mods[mod_id]["versions"]:
+                    self.mods[mod_id]["version"] = self.modConfig["mods"][mod_id]["version"]
+                else:
+                    if self.mods[mod_id]["download"] == {}:
+                        self.mods[mod_id]["version"] = self.getLatestVersion(mod_id)
+                    else:
+                        self.mods[mod_id]["version"] = "latest"
             else:
                 self.mods[mod_id]["update"] = self.mods[mod_id]["download"] != {}
                 if self.mods[mod_id]["download"] == {}:
