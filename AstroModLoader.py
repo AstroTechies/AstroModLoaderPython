@@ -1,6 +1,5 @@
 import os
 import sys
-import numpy
 import shutil
 import json
 import argparse
@@ -94,7 +93,7 @@ class AstroModLoader():
             self.modConfig = json.loads(f.read())
 
         # gather mod list (only files)
-        modFilenames = numpy.unique(self.getPaksInPath(
+        modFilenames = set(self.getPaksInPath(
             self.downloadPath) + self.getPaksInPath(self.installPath))
 
         logging.info("Parsing metadata...")

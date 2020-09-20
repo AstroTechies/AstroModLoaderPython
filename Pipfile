@@ -8,7 +8,6 @@ verify_ssl = true
 [packages]
 requests = "*"
 pypakparser = "*"
-numpy = "*"
 pyinstaller = {file = "https://github.com/pyinstaller/pyinstaller/archive/develop.zip"}
 terminaltables = "*"
 pythonnet = "*"
