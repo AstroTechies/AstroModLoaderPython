@@ -49,11 +49,11 @@
         },
         "pypakparser": {
             "hashes": [
-                "sha256:627f0e9fa13452deca58041b915b3850ae027d48c18eae9d436510f2681dd4ee",
-                "sha256:a7dca1b6b9a1938dc5d3b1dc3f9647509ca6ac0438a58509aa1ad18e0c3d7d64"
+                "sha256:69a4fbcafb52ea2050c4cac70741553d238d3721d33b4c0871446252848c432e",
+                "sha256:ea7cbc3116c092a2cae92c2232dd931c4834b1fd7c838c84ae75e306310185d8"
             ],
             "index": "pypi",
-            "version": "==1.1.1"
+            "version": "==1.2.0"
         },
         "pysimplegui": {
             "hashes": [
